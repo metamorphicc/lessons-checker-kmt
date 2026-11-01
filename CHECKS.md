@@ -1,21 +1,21 @@
-# Проверка
+# Verification
 
-- 36 проверок календаря и времени: начало/конец пары, перемены, пустые утренние слоты, субботнее ДО, воскресенье, опорная неделя, переход года и полночь Новосибирска.
-- Исходное расписание перенесено вручную и сверено с изображением страницы 23 PDF. Звонки внесены со скриншота пользователя.
-- `assembleRelease` и `lintRelease` завершаются успешно. Предупреждения анализатора о новых версиях инструментов, атрибутах Android 12 и правилах переноса резервных копий не блокируют сборку.
-- Подпись APK проверяется через `apksigner verify`. Приложение не запрашивает интернет.
+- 36 calendar and time checks cover class starts and ends, breaks, empty morning slots, remote Saturdays, Sundays, anchor weeks, year transitions, and midnight in Novosibirsk.
+- The transcribed schedule was checked against the image of PDF page 23. Class times come from the user's screenshot.
+- `assembleRelease` and `lintRelease` pass. Non-blocking lint warnings cover newer tool versions, Android 12 attributes, and backup transfer rules.
+- The APK signature was verified with `apksigner verify`. The app does not request internet access.
 
-## Граница проверки
+## Verification limits
 
-Подключённого телефона и настроенного Android-эмулятора нет. Запуск Activity, внешний вид на реальном экране, закрепление виджета и доставка системных обновлений на конкретной прошивке пока не проверены. Сборка и проверки логики не заменяют эти проверки.
+No Android phone or configured emulator was available. Activity startup, rendering on a real screen, widget pinning, and scheduled updates on a specific device have not been verified. A successful build and logic checks do not establish those results.
 
-## Проверка на телефоне
+## Device checks
 
-1. Установить APK и открыть «Пары · ИС-232».
-2. В настройках убедиться, что часы совпадают со скриншотом.
-3. Перелистать неделю: Пн 3/4, Вт 3/4, Ср 3/4/5, Чт 1/2/3/4, Пт 2/3/4, Сб ДО, Вс без пар.
-4. Добавить виджет размером 2 × 2 и сравнить текущую или ближайшую пару с приложением. Проверить часы и аудиторию. Длинные названия сокращаются; полное расписание доступно по нажатию. При обновлении удалить старый виджет и добавить заново.
-5. Разрешить точные обновления в настройках приложения, если Android предлагает этот пункт. Проверить переключение на ближайшем звонке и ручную кнопку ↻.
-6. Проверить виджет после перезагрузки телефона и изменения часового пояса.
+1. Install the APK and open **Пары · ИС-232**.
+2. Check the class times in Settings against the supplied screenshot.
+3. Browse the week: Monday 3/4, Tuesday 3/4, Wednesday 3/4/5, Thursday 1/2/3/4, Friday 2/3/4, Saturday remote, Sunday free.
+4. Add the 2 × 2 widget and compare its current or next class, time, and classroom with the app. Long names are shortened; tapping opens the full schedule. After upgrading, remove and re-add the old widget.
+5. Allow exact updates in Settings if Android offers the option. Check the next scheduled class transition and the manual **↻** button.
+6. Check the widget after a reboot and a time zone change.
 
-Расписание статичное: учебные праздники и замены не определяются автоматически.
+The schedule is static. Holidays and substitutions are not detected automatically.

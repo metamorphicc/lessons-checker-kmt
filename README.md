@@ -1,45 +1,49 @@
-# Пары · ИС-232
+# Lessons · ИС-232
 
-Android-приложение с виджетом главного экрана 2 × 2 ячейки. Работает без интернета. Виджет показывает текущую или ближайшую пару, время и аудиторию. Внутри приложения — полное расписание на день, преподаватели и переключение дат.
+An offline Android app with a 2 × 2 home screen widget for group ИС-232. The widget shows the current or next class, its time, and classroom. Tap it to open the full daily schedule, teacher names, and date navigation.
 
-## Установка
+## Installation
 
-1. Перешли `output/lessons-is232.apk` на телефон и открой файл. Требуется Android 8.0 или новее.
-2. Если Android попросит разрешение устанавливать приложения из выбранного файлового менеджера, разреши установку и заверши её.
-3. Открой **Пары · ИС-232**. Звонки уже заполнены со скриншота.
-4. Нажми **Добавить виджет**. Также можно зажать свободное место на главном экране → **Виджеты** → **Пары · ИС-232**. Размер по умолчанию — **2 × 2 ячейки**. Его можно увеличить.
-5. В **Настройках** нажми **Разрешить точные обновления**, если такой пункт есть. Разрешение «Будильники и напоминания» нужно для переключения пары в момент звонка. Без разрешения обновления могут задерживаться; в углу виджета есть кнопка **↻**, внизу — время последних данных.
+1. Transfer `output/lessons-is232.apk` to your phone and open it. Requires Android 8.0 or later.
+2. If Android asks, allow your file manager to install the APK and finish installation.
+3. Open **Пары · ИС-232**. Class times are already filled in from the supplied screenshot.
+4. Tap **Добавить виджет** (Add widget). You can also long-press an empty area of the home screen, open **Widgets**, and select **Пары · ИС-232**. The default size is **2 × 2 cells**; it can be enlarged.
+5. In **Настройки** (Settings), tap **Разрешить точные обновления** (Allow exact updates), if available. Android's Alarms & reminders permission allows the widget to switch classes at the scheduled time. Without it, updates may be delayed. Use **↻** to refresh manually; the footer shows when the displayed information was last updated.
 
-При обновлении с версии 1.0 установи APK поверх приложения. Удали старый виджет с главного экрана и добавь заново: лаунчер может сохранять прежний большой размер. Настройки приложения сохранятся.
+When upgrading from version 1.0, install the APK over the existing app, then remove and re-add the widget. Your launcher may otherwise retain its previous large size. App settings are preserved.
 
-Обычное нажатие на виджет открывает приложение. Длинные названия на виджете сокращаются; в приложении они видны полностью. Внизу виджета указаны дата и время последних данных.
+Long subject names are shortened in the widget. Tap it to read the full schedule.
 
-По умолчанию используется время Новосибирска (UTC+7). Если учишься в другом часовом поясе, включи **Часовой пояс телефона** в настройках и сохрани.
+The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Часовой пояс телефона** (Phone time zone) in Settings and save.
 
-## Что учтено
+## Schedule
 
-- Группа ИС-232, корпус 1, первый семестр 2026–2027. Источник — страница 23 предоставленного PDF.
-- Звонки: 08:30–10:00, 10:30–12:00, 12:20–13:50, 14:00–15:30, 15:40–17:10.
-- Суббота — ДО по уточнению пользователя. Очных пар в субботу нет. Чётность выбирать не нужно.
-- Замены, переносы, каникулы, праздники и окончание семестра автоматически не учитываются. После смены семестра данные нужно заменить.
+- Group ИС-232, building 1, first semester of 2026–2027. The source is page 23 of the supplied PDF.
+- Class times: 08:30–10:00, 10:30–12:00, 12:20–13:50, 14:00–15:30, and 15:40–17:10.
+- Saturday classes are remote, as confirmed by the user. They are excluded from the on-campus schedule. No week parity setting is needed.
+- Substitutions, rescheduled classes, holidays, breaks, and the end of the semester are not handled automatically. Replace the dataset for a new semester.
 
-## Сборка и проверка
+## Build and verification
 
-Стек: Java, стандартный Android SDK, RemoteViews и AlarmManager. Сторонних библиотек в приложении нет.
+Built with Java, the standard Android SDK, RemoteViews, and AlarmManager. The app has no third-party runtime dependencies.
 
-Нужны JDK 17+ (проверено на JDK 21), Android SDK Platform 36.1 и установленный Android SDK. Gradle Wrapper включён в проект. При первой сборке инструменты загружают зависимости.
+Requires JDK 17+ (verified with JDK 21), Android SDK Platform 36.1, and an installed Android SDK. Gradle Wrapper is included. The first build downloads build dependencies.
 
 ```powershell
 .\tools\test.ps1
 .\tools\build.ps1
 ```
 
-Если среда отличается, задай `JAVA_HOME` и `ANDROID_HOME`. `tools/test.ps1` проверяет логику без Android-устройства. Результат сборки — `output/lessons-is232.apk`, рядом SHA-256.
+Set `JAVA_HOME` and `ANDROID_HOME` if needed. `tools/test.ps1` checks schedule logic without an Android device. The build produces `output/lessons-is232.apk` and a SHA-256 checksum file.
 
-Для изменения исходных данных отредактируй `data/schedule.json`, затем выполни `python tools/generate_data.py` и пересобери. Java-файл данных генерируется, вручную его менять не нужно.
+To update the dataset, edit `data/schedule.json`, run `python tools/generate_data.py`, and rebuild. Edit the JSON source rather than the generated Java dataset.
 
-APK — локальная release-сборка, подписанная стандартным ключом разработки этого компьютера. Для обновления поверх установленной версии используй тот же ключ; он находится в пользовательском каталоге Android и не включён в репозиторий. Это не публикация в магазине.
+The APK is a local release build signed with this computer's standard Android development key. Use the same key for upgrades over an existing installation. The key is stored in the user's Android directory and is not tracked in this repository. This build has not been published to an app store.
 
-В [CHECKS.md](CHECKS.md) записаны выполненные проверки и оставшиеся проверки на телефоне. В [PLAN.md](PLAN.md) — подэтапы работы, в истории Git — отдельные короткие коммиты.
+[CHECKS.md](CHECKS.md) records completed checks and outstanding device checks. [PLAN.md](PLAN.md) tracks implementation steps. Each completed substep has a separate, short commit.
 
-Ограничения фонового обновления описаны в [документации Android](https://developer.android.com/develop/background-work/services/alarms). Автоматическое восстановление обновлений предусмотрено после перезагрузки, изменения времени и обновления приложения.
+See the [Android alarm documentation](https://developer.android.com/develop/background-work/services/alarms) for background update restrictions. The app reschedules updates after a reboot, a system time change, or an app update.
+
+## Live schedule research
+
+[docs/live-source.md](docs/live-source.md) describes the public JSON feed used by the college website. Online loading has not been integrated into the APK yet.

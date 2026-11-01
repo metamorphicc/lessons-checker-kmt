@@ -1,32 +1,37 @@
-# План
+# Plan
 
-Каждый подэтап завершается отдельным коммитом с коротким сообщением.
+Each completed substep gets a separate commit with a short English message.
 
-## 1. Исходные данные
-- [x] 1.1. Проверить проект и записать план.
-- [x] 1.2. Перенести ИС-232 со страницы 23, сохранить условия и пробелы источника.
+## 1. Source data
 
-## 2. Расписание
-- [x] 2.1. Рассчитывать день, чётность недели и список пар.
-- [x] 2.2. Добавить настройку звонков и текущую/следующую пару.
+- [x] 1.1. Inspect the project and record the plan.
+- [x] 1.2. Transcribe ИС-232 from page 23, preserving conditions and missing information.
 
-## 3. Телефон
-- [x] 3.1. Сделать экран расписания и настройки.
-- [x] 3.2. Добавить настоящий виджет главного экрана.
-- [x] 3.3. Обновлять виджет по звонкам, предусмотреть ограничения Android и компактную высоту.
+## 2. Schedule logic
 
-## 4. Проверка и установка
-- [x] 4.1. Проверить даты, границы времени, выходные и смену недели.
-- [x] 4.2. Собрать результат и написать инструкцию установки.
+- [x] 2.1. Calculate dates, week parity, and daily classes.
+- [x] 2.2. Add configurable class times and current/next class detection.
 
-## Ограничения источника
+## 3. Android app
 
-- PDF — скан, расписание ИС-232 находится на странице 23.
-- В PDF звонки не приведены; встроены часы со скриншота пользователя от 1 ноября 2026.
-- Субботние аудитории не приведены; не переносить аудитории из других дней.
-- Пользователь уточнил: субботние занятия в ДО. Исключены из очных пар, чётность в интерфейсе не нужна.
-- Замены, каникулы и праздники автоматически не учитываются.
+- [x] 3.1. Build the daily schedule screen and settings.
+- [x] 3.2. Add a native home screen widget.
+- [x] 3.3. Schedule updates at class boundaries, handle Android restrictions, and support compact layouts.
 
-## 5. Компактный виджет
-- [x] 5.1. Уменьшить виджет до 2 × 2 ячеек, оставить текущую или ближайшую пару.
-- [x] 5.2. Пересобрать обновление и проверить пакет установки: версия 1.1, 36 проверок, lint и подпись APK.
+## 4. Verification and installation
+
+- [x] 4.1. Check dates, class boundaries, weekends, and week transitions.
+- [x] 4.2. Build the APK and write installation instructions.
+
+## Source limitations
+
+- The PDF is scanned; the ИС-232 schedule is on page 23.
+- The PDF has no class times. Defaults come from the user's screenshot supplied on November 1, 2026.
+- Saturday classrooms are missing from the PDF; do not infer them from other days.
+- The user confirmed Saturday classes are remote. They are excluded from on-campus classes, so the UI does not need week parity.
+- Substitutions, holidays, and breaks are not handled automatically.
+
+## 5. Compact widget
+
+- [x] 5.1. Reduce the widget to 2 × 2 cells and show the current or next class.
+- [x] 5.2. Build and verify version 1.1: 36 checks, Android lint, and APK signature verification.
