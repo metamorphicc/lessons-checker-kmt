@@ -1,3 +1,5 @@
 <resources>
+    <string name="refresh_symbol">↻</string>
+    <string name="refresh_description">Обновить расписание</string>
     <string name="widget_description">Пары ИС-232 на сегодня, аудитории и время звонков</string>
 </resources>

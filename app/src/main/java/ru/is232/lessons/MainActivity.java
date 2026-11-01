@@ -7,6 +7,7 @@ import android.graphics.Typeface;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
 import android.os.*;
+import android.net.Uri;
 import android.text.InputType;
 import android.view.*;
 import android.widget.*;
@@ -35,7 +36,7 @@ public class MainActivity extends Activity {
         if (state!=null) { selected=LocalDate.parse(state.getString("date",selected.toString())); followToday=state.getBoolean("follow",true); }
         show();
     }
-    @Override protected void onResume() { super.onResume(); handler.post(tick); }
+    @Override protected void onResume() { super.onResume(); LessonsWidget.updateAll(this); handler.post(tick); }
     @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("date",selected.toString()); state.putBoolean("follow",followToday); super.onSaveInstanceState(state);
@@ -114,6 +115,15 @@ public class MainActivity extends Activity {
     void configure() {
         editing=true; frame();
         column.addView(text("Настройки",30,INK,true));
+        if(Build.VERSION.SDK_INT>=31) {
+            boolean exact=getSystemService(AlarmManager.class).canScheduleExactAlarms();
+            column.addView(text(exact ? "Точные обновления разрешены" : "Обновление в момент звонка",18,INK,true));
+            column.addView(text("Чтобы виджет переключал текущую пару вовремя, разреши точные будильники. Без этого Android может задерживать обновления; кнопка ↻ работает всегда.",14,MUTED,false));
+            column.addView(button(exact ? "Настройки обновлений" : "Разрешить точные обновления",()->{
+                try { startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName()))); }
+                catch(ActivityNotFoundException e) {new AlertDialog.Builder(this).setMessage("Найди приложение «Пары · ИС-232» в настройках Android → Специальный доступ → Будильники и напоминания.").setPositiveButton("Понятно",null).show();}
+            })); gap(16);
+        }
         Switch zone=new Switch(this); zone.setText("Часовой пояс телефона"); zone.setChecked(settings.deviceZone()); zone.setMinHeight(dp(48)); column.addView(zone);
         column.addView(text("По умолчанию: Новосибирск (UTC+7).",13,MUTED,false)); gap(16);
         column.addView(text("Звонки",22,INK,true));

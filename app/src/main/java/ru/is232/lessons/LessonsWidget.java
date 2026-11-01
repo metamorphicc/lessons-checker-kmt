@@ -4,6 +4,7 @@ import android.app.*;
 import android.appwidget.*;
 import android.content.*;
 import android.os.Bundle;
+import android.os.Build;
 import android.widget.RemoteViews;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -19,7 +20,8 @@ public class LessonsWidget extends AppWidgetProvider {
         String action=intent.getAction();
         if (REFRESH.equals(action) || Intent.ACTION_BOOT_COMPLETED.equals(action)
             || Intent.ACTION_TIME_CHANGED.equals(action) || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
-            || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) || Intent.ACTION_DATE_CHANGED.equals(action)) updateAll(c);
+            || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) || Intent.ACTION_DATE_CHANGED.equals(action)
+            || AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED.equals(action)) updateAll(c);
     }
     @Override public void onDisabled(Context c) {
         c.getSystemService(AlarmManager.class).cancel(refreshIntent(c));
@@ -38,6 +40,7 @@ public class LessonsWidget extends AppWidgetProvider {
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,now.toLocalTime(),settings.bells());
         PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         for(int id:ids) {
+            boolean compact=manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,320)<380;
             RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
             views.setTextViewText(R.id.widget_date,"ИС-232 · "+date.format(DateTimeFormatter.ofPattern("EEE, d MMM",RU)));
             boolean distance=date.getDayOfWeek()==DayOfWeek.SATURDAY;
@@ -46,6 +49,8 @@ public class LessonsWidget extends AppWidgetProvider {
             views.removeAllViews(R.id.widget_lessons);
             for(ScheduleEngine.Lesson lesson:lessons) {
                 RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_row);
+                row.setInt(R.id.row_title,"setMaxLines",compact ? 1 : 2);
+                row.setInt(R.id.row_meta,"setMaxLines",1);
                 String variant=lesson.week()!=null && settings.week(date)==null ? " ("+ScheduleEngine.weekLabel(lesson.week()).toLowerCase(RU)+")" : "";
                 boolean current=moment.current()!=null && moment.current().slot()==lesson.slot();
                 row.setTextViewText(R.id.row_title,(current?"Сейчас → ":"")+lesson.slot()+". "+lesson.shortTitle()+variant);
@@ -62,12 +67,21 @@ public class LessonsWidget extends AppWidgetProvider {
             views.setOnClickPendingIntent(R.id.widget_refresh,refreshIntent(c));
             manager.updateAppWidget(id,views);
         }
-        // Inexact alarm: no special permission or exact-alarm access required.
         ZonedDateTime boundary=date.plusDays(1).atStartOfDay(settings.zone());
-        for(ScheduleEngine.Bell bell:settings.bells()) for(LocalTime time: new LocalTime[]{bell.start(),bell.end()}) {
+        for(ScheduleEngine.Lesson lesson:lessons) {
+            if(settings.bells().isEmpty()) break;
+            ScheduleEngine.Bell bell=settings.bells().get(lesson.slot()-1);
+            for(LocalTime time: new LocalTime[]{bell.start(),bell.end()}) {
             ZonedDateTime candidate=date.atTime(time).atZone(settings.zone());
             if(candidate.isAfter(now) && candidate.isBefore(boundary)) boundary=candidate;
+            }
         }
-        c.getSystemService(AlarmManager.class).setAndAllowWhileIdle(AlarmManager.RTC,boundary.toInstant().toEpochMilli(),refreshIntent(c));
+        AlarmManager alarms=c.getSystemService(AlarmManager.class);
+        long trigger=boundary.toInstant().toEpochMilli();
+        if(Build.VERSION.SDK_INT<31 || alarms.canScheduleExactAlarms()) {
+            try { alarms.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP,trigger,refreshIntent(c)); return; }
+            catch(SecurityException ignored) { /* Access can be revoked between check and call. */ }
+        }
+        alarms.setAndAllowWhileIdle(AlarmManager.RTC,trigger,refreshIntent(c));
     }
 }
