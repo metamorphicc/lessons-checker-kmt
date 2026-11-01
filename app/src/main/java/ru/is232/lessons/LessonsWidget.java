@@ -12,12 +12,14 @@ import java.util.*;
 
 public class LessonsWidget extends AppWidgetProvider {
     private static final String REFRESH="ru.is232.lessons.REFRESH";
+    private static final String MANUAL="ru.is232.lessons.MANUAL_REFRESH";
     private static final Locale RU=Locale.forLanguageTag("ru");
     @Override public void onUpdate(Context c, AppWidgetManager m, int[] ids) { updateAll(c); }
     @Override public void onAppWidgetOptionsChanged(Context c,AppWidgetManager m,int id,Bundle options) { updateAll(c); }
     @Override public void onReceive(Context c, Intent intent) {
         super.onReceive(c,intent);
         String action=intent.getAction();
+        if(MANUAL.equals(action)) {LiveSyncService.requestNow(c,true);updateAll(c);}
         if (REFRESH.equals(action) || Intent.ACTION_BOOT_COMPLETED.equals(action)
             || Intent.ACTION_TIME_CHANGED.equals(action) || Intent.ACTION_TIMEZONE_CHANGED.equals(action)
             || Intent.ACTION_MY_PACKAGE_REPLACED.equals(action) || Intent.ACTION_DATE_CHANGED.equals(action)
@@ -29,19 +31,24 @@ public class LessonsWidget extends AppWidgetProvider {
     static PendingIntent refreshIntent(Context c) {
         return PendingIntent.getBroadcast(c,0,new Intent(c,LessonsWidget.class).setAction(REFRESH),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
     }
+    static PendingIntent manualIntent(Context c) {
+        return PendingIntent.getBroadcast(c,1,new Intent(c,LessonsWidget.class).setAction(MANUAL),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+    }
     public static void updateAll(Context c) {
         AppWidgetManager manager=AppWidgetManager.getInstance(c);
         int[] ids=manager.getAppWidgetIds(new ComponentName(c,LessonsWidget.class));
         if(ids.length==0) return;
+        LiveSyncService.ensureScheduled(c); LiveSyncService.requestNow(c,false);
         Settings settings=new Settings(c);
         ZonedDateTime now=ZonedDateTime.now(settings.zone());
         LocalDate date=now.toLocalDate();
-        List<ScheduleEngine.Lesson> lessons=settings.lessons(date);
+        ScheduleRepository.Day day=ScheduleRepository.day(c,date,settings);
+        List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,now.toLocalTime(),settings.bells());
         PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         for(int id:ids) {
             RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
-            boolean distance=date.getDayOfWeek()==DayOfWeek.SATURDAY;
+            boolean distance=day.remoteOnly();
             ScheduleEngine.Lesson focus=moment.current()!=null ? moment.current() : moment.next();
             boolean unknownBells=!lessons.isEmpty() && settings.bells().isEmpty();
             if(unknownBells) focus=lessons.get(0);
@@ -57,10 +64,10 @@ public class LessonsWidget extends AppWidgetProvider {
                 views.setTextViewText(R.id.widget_time,"Полный список —");
                 views.setTextViewText(R.id.widget_room,"по нажатию");
             }
-            views.setTextViewText(R.id.widget_footer,now.format(DateTimeFormatter.ofPattern("d MMM · HH:mm",RU)));
-            views.setContentDescription(R.id.widget_footer,"Обновлено "+now.format(DateTimeFormatter.ofPattern("d MMMM HH:mm",RU))+". Статичное расписание без замен.");
+            views.setTextViewText(R.id.widget_footer,day.widgetBadge(settings.zone(),date));
+            views.setContentDescription(R.id.widget_footer,date.toString()+". "+day.badge(settings.zone()));
             views.setOnClickPendingIntent(R.id.widget_root,open);
-            views.setOnClickPendingIntent(R.id.widget_refresh,refreshIntent(c));
+            views.setOnClickPendingIntent(R.id.widget_refresh,manualIntent(c));
             manager.updateAppWidget(id,views);
         }
         ZonedDateTime boundary=date.plusDays(1).atStartOfDay(settings.zone());

@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private Settings settings;
     private LocalDate selected;
     private boolean followToday=true, editing=false;
+    private boolean resumed;
     private LinearLayout column;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable tick=new Runnable() { public void run() {
@@ -36,8 +37,18 @@ public class MainActivity extends Activity {
         if (state!=null) { selected=LocalDate.parse(state.getString("date",selected.toString())); followToday=state.getBoolean("follow",true); }
         show();
     }
-    @Override protected void onResume() { super.onResume(); LessonsWidget.updateAll(this); handler.post(tick); }
-    @Override protected void onPause() { handler.removeCallbacks(tick); super.onPause(); }
+    @Override protected void onResume() {
+        super.onResume(); resumed=true; LiveSyncService.ensureScheduled(this);
+        LessonsWidget.updateAll(this); handler.post(tick); refreshLive(false);
+    }
+    @Override protected void onPause() { resumed=false;handler.removeCallbacks(tick); super.onPause(); }
+    void refreshLive(boolean force) {
+        ScheduleRepository.refreshAsync(this,force,()->handler.post(()->{
+            LessonsWidget.updateAll(getApplicationContext());
+            if(resumed && !editing) show();
+        }));
+        if(!editing) show();
+    }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("date",selected.toString()); state.putBoolean("follow",followToday); super.onSaveInstanceState(state);
     }
@@ -72,18 +83,23 @@ public class MainActivity extends Activity {
         heading.addView(button("Настройки",this::configure)); column.addView(heading); gap(20);
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU)),16,MUTED,false));
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),36,INK,true));
-        column.addView(text("Корпус 1 · Очные пары",14,MUTED,false));
+        column.addView(text("ИС-232 · Очные пары",14,MUTED,false));
         LinearLayout nav=new LinearLayout(this);
         Button prev=button("←",()->{selected=selected.minusDays(1);followToday=false;show();}); prev.setContentDescription("Предыдущий день");
         Button today=button("Сегодня",()->{selected=LocalDate.now(settings.zone());followToday=true;show();});
         Button next=button("→",()->{selected=selected.plusDays(1);followToday=false;show();}); next.setContentDescription("Следующий день");
         for (Button b : new Button[]{prev,today,next}) nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));
         column.addView(nav); gap(16);
-        List<ScheduleEngine.Lesson> lessons=settings.lessons(selected);
+        ScheduleRepository.Day day=ScheduleRepository.day(this,selected,settings);
+        column.addView(text(day.badge(settings.zone()),13,MUTED,false));
+        if("base".equals(day.source())) column.addView(text("Замены не подтверждены. Это расписание из PDF.",13,MUTED,false));
+        else column.addView(text("Сайт указывает преподавателей и аудитории. Названия предметов не передаются.",13,MUTED,false));
+        column.addView(button(ScheduleRepository.isRefreshing() ? "Проверяем сайт…" : "Обновить с сайта",()->refreshLive(true)));
+        List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());
         boolean isToday=selected.equals(LocalDate.now(settings.zone()));
         LinearLayout summary=vertical(); summary.setPadding(dp(18),dp(14),dp(18),dp(14)); summary.setBackground(background(ACCENT,20));
-        boolean distance=selected.getDayOfWeek()==DayOfWeek.SATURDAY;
+        boolean distance=day.remoteOnly();
         String headline=distance ? "Очных пар нет · ДО" : isToday ? moment.label() : lessons.isEmpty() ? "Без пар" : lessons.stream().map(ScheduleEngine.Lesson::slot).distinct().count()+" пары по расписанию";
         summary.addView(text(headline,18,Color.WHITE,true));
         ScheduleEngine.Lesson active=moment.current()!=null ? moment.current() : moment.next();
@@ -92,7 +108,7 @@ public class MainActivity extends Activity {
             summary.addView(text(ambiguous ? "Зависит от чётности недели" : active.shortTitle(),24,Color.WHITE,true));
             summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),14,Color.WHITE,false));
             if (moment.current()!=null && moment.next()!=null) summary.addView(text("Далее: "+moment.next().slot()+" пара · "+moment.next().shortTitle(),14,Color.WHITE,false));
-        } else summary.addView(text(distance ? "Субботние занятия — дистанционно." : lessons.isEmpty() ? "Можно выдохнуть. Проверь только замены." : "Все пары дня — ниже",15,Color.WHITE,false));
+        } else summary.addView(text(distance ? "Занятия — дистанционно." : lessons.isEmpty() ? ("base".equals(day.source()) ? "По базовому расписанию. Замены не подтверждены." : "По опубликованному расписанию очных пар нет.") : "Все пары дня — ниже",15,Color.WHITE,false));
         column.addView(summary); gap(20);
         for (ScheduleEngine.Lesson lesson : lessons) {
             LinearLayout card=vertical(); card.setPadding(dp(16),dp(12),dp(16),dp(14));
@@ -101,11 +117,11 @@ public class MainActivity extends Activity {
             card.addView(text(lesson.slot()+" пара · "+settings.bellLabel(lesson.slot())+variant,13,ACCENT,true));
             card.addView(text(lesson.title(),19,INK,true));
             card.addView(text(ScheduleEngine.room(lesson),17,ACCENT,true));
-            card.addView(text(lesson.teacher(),14,MUTED,false)); column.addView(card); gap(10);
+            if(!lesson.teacher().isEmpty()) card.addView(text(lesson.teacher(),14,MUTED,false)); column.addView(card); gap(10);
         }
         gap(8);
         column.addView(button("Добавить виджет",this::pinWidget));
-        column.addView(text("1 семестр 2026–2027 · Корпус 1\nСтатичное расписание из PDF, стр. 23. Замены, каникулы и праздники проверяй отдельно.\nЧасовой пояс: "+settings.zone().getId(),12,MUTED,false));
+        column.addView(text("Сайт КМТ + базовое расписание, 1 семестр 2026–2027.\nОбновление при открытии и в фоне. Android может задерживать фоновые запросы.\nЧасовой пояс: "+settings.zone().getId(),12,MUTED,false));
     }
     void pinWidget() {
         AppWidgetManager manager=getSystemService(AppWidgetManager.class);
