@@ -19,7 +19,9 @@ public final class Settings {
     public String anchorWeek() { return prefs.getString("week", null); }
     public String week(LocalDate date) { return ScheduleEngine.week(date, anchor(), anchorWeek()); }
     public List<ScheduleEngine.Lesson> lessons(LocalDate date) { return ScheduleEngine.lessons(date, anchor(), anchorWeek()); }
-    public String time(int slot, boolean end) { return prefs.getString("bell" + slot + (end ? "end" : "start"), ""); }
+    public String time(int slot, boolean end) {
+        return prefs.getString("bell" + slot + (end ? "end" : "start"), ScheduleData.BELLS[slot-1][end ? 1 : 0]);
+    }
     public List<ScheduleEngine.Bell> bells() {
         List<ScheduleEngine.Bell> result = new ArrayList<>();
         try {

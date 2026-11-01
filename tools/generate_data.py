@@ -13,6 +13,9 @@ for lesson in data['lessons']:
     args = [str(lesson['day']), str(lesson['slot']), quoted(subject['title']),
             quoted(subject['shortTitle']), quoted(subject['teacher']), quoted(lesson['room']), quoted(lesson.get('week'))]
     lines.append('        new ScheduleEngine.Lesson(' + ', '.join(args) + '),')
+lines += ['    };', '    public static final String[][] BELLS = {']
+for start, end in data['bellTimes'] or []:
+    lines.append('        {' + quoted(start) + ', ' + quoted(end) + '},')
 lines += ['    };', '    private ScheduleData() {}', '}']
 target = root / 'app/src/main/java/ru/is232/lessons/ScheduleData.java'
 target.parent.mkdir(parents=True, exist_ok=True)

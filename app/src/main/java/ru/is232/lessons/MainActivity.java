@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
         heading.addView(button("Настройки",this::configure)); column.addView(heading); gap(20);
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU)),16,MUTED,false));
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),36,INK,true));
-        column.addView(text(ScheduleEngine.weekLabel(settings.week(selected))+" неделя".replace(" неделя",settings.week(selected)==null ? "" : " неделя"),14,MUTED,false));
+        column.addView(text(ScheduleEngine.weekLabel(settings.week(selected))+(settings.week(selected)==null ? "" : " неделя"),14,MUTED,false));
         LinearLayout nav=new LinearLayout(this);
         Button prev=button("←",()->{selected=selected.minusDays(1);followToday=false;show();}); prev.setContentDescription("Предыдущий день");
         Button today=button("Сегодня",()->{selected=LocalDate.now(settings.zone());followToday=true;show();});
@@ -86,7 +86,8 @@ public class MainActivity extends Activity {
         summary.addView(text(headline,18,Color.WHITE,true));
         ScheduleEngine.Lesson active=moment.current()!=null ? moment.current() : moment.next();
         if (isToday && active!=null) {
-            summary.addView(text(active.shortTitle(),24,Color.WHITE,true));
+            boolean ambiguous=active.week()!=null && settings.week(selected)==null;
+            summary.addView(text(ambiguous ? "Зависит от чётности недели" : active.shortTitle(),24,Color.WHITE,true));
             summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),14,Color.WHITE,false));
             if (moment.current()!=null && moment.next()!=null) summary.addView(text("Далее: "+moment.next().slot()+" пара · "+moment.next().shortTitle(),14,Color.WHITE,false));
         } else summary.addView(text(lessons.isEmpty() ? "Можно выдохнуть. Проверь только замены." : "Все пары дня — ниже",15,Color.WHITE,false));
@@ -121,7 +122,7 @@ public class MainActivity extends Activity {
         Switch zone=new Switch(this); zone.setText("Часовой пояс телефона"); zone.setChecked(settings.deviceZone()); zone.setMinHeight(dp(48)); column.addView(zone);
         column.addView(text("По умолчанию: Новосибирск (UTC+7).",13,MUTED,false)); gap(16);
         column.addView(text("Звонки",22,INK,true));
-        column.addView(text("В PDF нет времени. Введи все пять пар в формате 08:30. Или оставь все поля пустыми — будут только номера пар.",14,MUTED,false));
+        column.addView(text("Звонки уже заполнены по твоему скриншоту. Можно изменить все пять пар в формате 08:30 или очистить все поля, чтобы оставить только номера.",14,MUTED,false));
         EditText[][] fields=new EditText[5][2];
         for(int i=0;i<5;i++) {
             column.addView(text((i+1)+" пара",14,INK,true));
