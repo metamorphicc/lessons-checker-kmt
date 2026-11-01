@@ -40,29 +40,25 @@ public class LessonsWidget extends AppWidgetProvider {
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,now.toLocalTime(),settings.bells());
         PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         for(int id:ids) {
-            boolean compact=manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,320)<380;
             RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
-            views.setTextViewText(R.id.widget_date,"ИС-232 · "+date.format(DateTimeFormatter.ofPattern("EEE, d MMM",RU)));
             boolean distance=date.getDayOfWeek()==DayOfWeek.SATURDAY;
-            views.setTextViewText(R.id.widget_status,distance ? "Очных пар нет · ДО" : moment.label());
-            views.setTextViewText(R.id.widget_week,"Корпус 1 · Очные пары");
-            views.removeAllViews(R.id.widget_lessons);
-            for(ScheduleEngine.Lesson lesson:lessons) {
-                RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_row);
-                row.setInt(R.id.row_title,"setMaxLines",compact ? 1 : 2);
-                row.setInt(R.id.row_meta,"setMaxLines",1);
-                String variant=lesson.week()!=null && settings.week(date)==null ? " ("+ScheduleEngine.weekLabel(lesson.week()).toLowerCase(RU)+")" : "";
-                boolean current=moment.current()!=null && moment.current().slot()==lesson.slot();
-                row.setTextViewText(R.id.row_title,(current?"Сейчас → ":"")+lesson.slot()+". "+lesson.shortTitle()+variant);
-                row.setTextViewText(R.id.row_meta,settings.bellLabel(lesson.slot())+" · "+ScheduleEngine.room(lesson));
-                views.addView(R.id.widget_lessons,row);
+            ScheduleEngine.Lesson focus=moment.current()!=null ? moment.current() : moment.next();
+            boolean unknownBells=!lessons.isEmpty() && settings.bells().isEmpty();
+            if(unknownBells) focus=lessons.get(0);
+            if(focus!=null) {
+                String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
+                views.setTextViewText(R.id.widget_status,status);
+                views.setTextViewText(R.id.widget_title,focus.shortTitle());
+                views.setTextViewText(R.id.widget_time,settings.bellLabel(focus.slot()));
+                views.setTextViewText(R.id.widget_room,ScheduleEngine.room(focus));
+            } else {
+                views.setTextViewText(R.id.widget_status,"ИС-232");
+                views.setTextViewText(R.id.widget_title,distance ? "Сегодня в ДО" : lessons.isEmpty() ? "Сегодня без пар" : "На сегодня всё");
+                views.setTextViewText(R.id.widget_time,"Полный список —");
+                views.setTextViewText(R.id.widget_room,"по нажатию");
             }
-            if(lessons.isEmpty()) {
-                RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_row);
-                row.setTextViewText(R.id.row_title,distance ? "Субботние занятия — в ДО" : "Сегодня без пар");
-                row.setTextViewText(R.id.row_meta,distance ? "На очные пары ехать не нужно." : "Отдыхай. Замены проверяй отдельно."); views.addView(R.id.widget_lessons,row);
-            }
-            views.setTextViewText(R.id.widget_footer,"Данные на "+now.format(DateTimeFormatter.ofPattern("d.MM HH:mm"))+" · PDF без замен\nНажми ↻, если время обновления устарело");
+            views.setTextViewText(R.id.widget_footer,now.format(DateTimeFormatter.ofPattern("d MMM · HH:mm",RU)));
+            views.setContentDescription(R.id.widget_footer,"Обновлено "+now.format(DateTimeFormatter.ofPattern("d MMMM HH:mm",RU))+". Статичное расписание без замен.");
             views.setOnClickPendingIntent(R.id.widget_root,open);
             views.setOnClickPendingIntent(R.id.widget_refresh,refreshIntent(c));
             manager.updateAppWidget(id,views);
