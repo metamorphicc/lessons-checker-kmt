@@ -29,7 +29,7 @@ Each completed substep gets a separate commit with a short English message.
 - The PDF has no class times. Defaults come from the user's screenshot supplied on November 1, 2026.
 - Saturday classrooms are missing from the PDF; do not infer them from other days.
 - The user confirmed Saturday classes are remote. They are excluded from on-campus classes, so the UI does not need week parity.
-- Substitutions, holidays, and breaks are not handled automatically.
+- The baseline does not contain substitutions or holidays. Version 1.2 uses dated website rows when available and labels the PDF fallback explicitly.
 
 ## 5. Compact widget
 
@@ -41,4 +41,4 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 6.1. Validate exact dates and group rows, add HTTPS loading and a dated cache.
 - [x] 6.2. Connect background sync, the daily screen, and the compact widget.
 - [x] 6.3. Test cancellations, missing dates, remote classes, and fallback behavior.
-- [ ] 6.4. Build the update and document the live feed contract.
+- [x] 6.4. Build version 1.2 and document the live feed contract: 36 time checks, 25 live-data tests, release lint, Java HTTPS smoke check, and APK signature verification.

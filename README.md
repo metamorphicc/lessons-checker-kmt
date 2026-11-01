@@ -1,6 +1,6 @@
 # Lessons · ИС-232
 
-An offline Android app with a 2 × 2 home screen widget for group ИС-232. The widget shows the current or next class, its time, and classroom. Tap it to open the full daily schedule, teacher names, and date navigation.
+An Android app with a 2 × 2 home screen widget for group ИС-232. It loads dated schedules from the college website and keeps a local cache. The widget shows the current or next class, its time, and classroom. Tap it to open the full daily schedule and date navigation.
 
 ## Installation
 
@@ -12,16 +12,27 @@ An offline Android app with a 2 × 2 home screen widget for group ИС-232. The 
 
 When upgrading from version 1.0, install the APK over the existing app, then remove and re-add the widget. Your launcher may otherwise retain its previous large size. App settings are preserved.
 
-Long subject names are shortened in the widget. Tap it to read the full schedule.
+Long labels are shortened in the widget. Tap it to read the full schedule.
 
 The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Часовой пояс телефона** (Phone time zone) in Settings and save.
 
 ## Schedule
 
-- Group ИС-232, building 1, first semester of 2026–2027. The source is page 23 of the supplied PDF.
+- Group ИС-232. Dated website rows take priority; the fallback is the first-semester 2026–2027 schedule on page 23 of the supplied PDF.
 - Class times: 08:30–10:00, 10:30–12:00, 12:20–13:50, 14:00–15:30, and 15:40–17:10.
 - Saturday classes are remote, as confirmed by the user. They are excluded from the on-campus schedule. No week parity setting is needed.
-- Substitutions, rescheduled classes, holidays, breaks, and the end of the semester are not handled automatically. Replace the dataset for a new semester.
+- Published cancellations, extra classes, and classroom changes replace the entire baseline day. The app does not invent dates for undated rows or reuse a previous week's entry.
+- Subjects are not included in the live feed. Live classes show the teacher or activity exactly as supplied by the website; the PDF fallback retains subject names.
+- Holidays and breaks are reflected only when the college publishes the corresponding dated schedule. An unpublished day falls back to the PDF with an explicit warning. Replace the fallback dataset for a new semester.
+
+## Live updates and offline behavior
+
+- The app checks on opening (with a 15-minute freshness interval) and requests background sync every 15 minutes while a network is available. Android can delay background jobs, especially in battery-saving modes.
+- Tap **Обновить с сайта** (Refresh from website) in the app or **↻** on the widget to request a new fetch. Repeated requests are briefly throttled.
+- **Сайт** means an exact-date website schedule was fetched recently. **Кэш сайта** means the app is using an older successful fetch or the latest refresh failed. The timestamp is the fetch time, not the college's edit time; the endpoint does not provide an edit timestamp.
+- **Базовое** / **база** means the displayed day comes from the PDF. The app distinguishes an unpublished date, a first run, and a failed refresh. A published day with all five classes cancelled stays empty and is never filled from the PDF.
+- Remote classes marked **ДО** are excluded from on-campus classes. Saturday's baseline remains remote as requested. A dated website row can override it if the college publishes actual on-campus classes.
+- Only dated ИС-232 rows are cached. Failed downloads and invalid responses preserve the last valid snapshot. A successful response replaces the snapshot, including removal of dates no longer published.
 
 ## Build and verification
 
@@ -46,4 +57,4 @@ See the [Android alarm documentation](https://developer.android.com/develop/back
 
 ## Live schedule research
 
-[docs/live-source.md](docs/live-source.md) describes the public JSON feed used by the college website. Online loading has not been integrated into the APK yet.
+[docs/live-source.md](docs/live-source.md) describes the public JSON feed used by the college website. Version 1.2 integrates this feed in the daily screen and widget through a standard Android JobService. The app requests internet and network-state access; no account or API key is needed.
