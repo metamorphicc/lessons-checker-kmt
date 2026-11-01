@@ -40,8 +40,9 @@ public class LessonsWidget extends AppWidgetProvider {
         for(int id:ids) {
             RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
             views.setTextViewText(R.id.widget_date,"ИС-232 · "+date.format(DateTimeFormatter.ofPattern("EEE, d MMM",RU)));
-            views.setTextViewText(R.id.widget_status,moment.label());
-            views.setTextViewText(R.id.widget_week,ScheduleEngine.weekLabel(settings.week(date)));
+            boolean distance=date.getDayOfWeek()==DayOfWeek.SATURDAY;
+            views.setTextViewText(R.id.widget_status,distance ? "Очных пар нет · ДО" : moment.label());
+            views.setTextViewText(R.id.widget_week,"Корпус 1 · Очные пары");
             views.removeAllViews(R.id.widget_lessons);
             for(ScheduleEngine.Lesson lesson:lessons) {
                 RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_row);
@@ -53,8 +54,8 @@ public class LessonsWidget extends AppWidgetProvider {
             }
             if(lessons.isEmpty()) {
                 RemoteViews row=new RemoteViews(c.getPackageName(),R.layout.widget_row);
-                row.setTextViewText(R.id.row_title,"Сегодня без пар");
-                row.setTextViewText(R.id.row_meta,"Отдыхай. Замены проверяй отдельно."); views.addView(R.id.widget_lessons,row);
+                row.setTextViewText(R.id.row_title,distance ? "Субботние занятия — в ДО" : "Сегодня без пар");
+                row.setTextViewText(R.id.row_meta,distance ? "На очные пары ехать не нужно." : "Отдыхай. Замены проверяй отдельно."); views.addView(R.id.widget_lessons,row);
             }
             views.setTextViewText(R.id.widget_footer,"Данные на "+now.format(DateTimeFormatter.ofPattern("d.MM HH:mm"))+" · PDF без замен\nНажми ↻, если время обновления устарело");
             views.setOnClickPendingIntent(R.id.widget_root,open);

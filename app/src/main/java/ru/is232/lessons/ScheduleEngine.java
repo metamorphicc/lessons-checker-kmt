@@ -8,7 +8,7 @@ import java.util.*;
 /** Calendar-only engine. The device UI and widget share this implementation. */
 public final class ScheduleEngine {
     public record Lesson(int day, int slot, String title, String shortTitle,
-                         String teacher, String room, String week) {}
+                         String teacher, String room, String week, String delivery) {}
     public record Bell(LocalTime start, LocalTime end) {
         public Bell {
             if (start == null || end == null || !start.isBefore(end))
@@ -31,7 +31,7 @@ public final class ScheduleEngine {
         String week = week(date, anchor, anchorWeek);
         List<Lesson> result = new ArrayList<>();
         for (Lesson lesson : ScheduleData.LESSONS) {
-            if (lesson.day() == date.getDayOfWeek().getValue()
+            if (!"distance".equals(lesson.delivery()) && lesson.day() == date.getDayOfWeek().getValue()
                     && (lesson.week() == null || week == null || lesson.week().equals(week))) result.add(lesson);
         }
         return result;

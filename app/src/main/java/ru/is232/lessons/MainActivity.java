@@ -71,7 +71,7 @@ public class MainActivity extends Activity {
         heading.addView(button("Настройки",this::configure)); column.addView(heading); gap(20);
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU)),16,MUTED,false));
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),36,INK,true));
-        column.addView(text(ScheduleEngine.weekLabel(settings.week(selected))+(settings.week(selected)==null ? "" : " неделя"),14,MUTED,false));
+        column.addView(text("Корпус 1 · Очные пары",14,MUTED,false));
         LinearLayout nav=new LinearLayout(this);
         Button prev=button("←",()->{selected=selected.minusDays(1);followToday=false;show();}); prev.setContentDescription("Предыдущий день");
         Button today=button("Сегодня",()->{selected=LocalDate.now(settings.zone());followToday=true;show();});
@@ -82,7 +82,8 @@ public class MainActivity extends Activity {
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());
         boolean isToday=selected.equals(LocalDate.now(settings.zone()));
         LinearLayout summary=vertical(); summary.setPadding(dp(18),dp(14),dp(18),dp(14)); summary.setBackground(background(ACCENT,20));
-        String headline=isToday ? moment.label() : lessons.isEmpty() ? "Без пар" : lessons.stream().map(ScheduleEngine.Lesson::slot).distinct().count()+" пары по расписанию";
+        boolean distance=selected.getDayOfWeek()==DayOfWeek.SATURDAY;
+        String headline=distance ? "Очных пар нет · ДО" : isToday ? moment.label() : lessons.isEmpty() ? "Без пар" : lessons.stream().map(ScheduleEngine.Lesson::slot).distinct().count()+" пары по расписанию";
         summary.addView(text(headline,18,Color.WHITE,true));
         ScheduleEngine.Lesson active=moment.current()!=null ? moment.current() : moment.next();
         if (isToday && active!=null) {
@@ -90,7 +91,7 @@ public class MainActivity extends Activity {
             summary.addView(text(ambiguous ? "Зависит от чётности недели" : active.shortTitle(),24,Color.WHITE,true));
             summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),14,Color.WHITE,false));
             if (moment.current()!=null && moment.next()!=null) summary.addView(text("Далее: "+moment.next().slot()+" пара · "+moment.next().shortTitle(),14,Color.WHITE,false));
-        } else summary.addView(text(lessons.isEmpty() ? "Можно выдохнуть. Проверь только замены." : "Все пары дня — ниже",15,Color.WHITE,false));
+        } else summary.addView(text(distance ? "Субботние занятия — дистанционно." : lessons.isEmpty() ? "Можно выдохнуть. Проверь только замены." : "Все пары дня — ниже",15,Color.WHITE,false));
         column.addView(summary); gap(20);
         for (ScheduleEngine.Lesson lesson : lessons) {
             LinearLayout card=vertical(); card.setPadding(dp(16),dp(12),dp(16),dp(14));
@@ -113,12 +114,6 @@ public class MainActivity extends Activity {
     void configure() {
         editing=true; frame();
         column.addView(text("Настройки",30,INK,true));
-        column.addView(text("Чётность текущей недели",18,INK,true));
-        column.addView(text("Выбери неделю, которая идёт сейчас. Дальше недели будут переключаться автоматически.",14,MUTED,false));
-        Spinner week=new Spinner(this);
-        week.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,new String[]{"Не знаю","Нечётная","Чётная"}));
-        String current=settings.week(LocalDate.now(settings.zone())); week.setSelection("odd".equals(current)?1:"even".equals(current)?2:0);
-        column.addView(week,new LinearLayout.LayoutParams(-1,dp(52))); gap(12);
         Switch zone=new Switch(this); zone.setText("Часовой пояс телефона"); zone.setChecked(settings.deviceZone()); zone.setMinHeight(dp(48)); column.addView(zone);
         column.addView(text("По умолчанию: Новосибирск (UTC+7).",13,MUTED,false)); gap(16);
         column.addView(text("Звонки",22,INK,true));
@@ -148,7 +143,7 @@ public class MainActivity extends Activity {
                     if(!ScheduleEngine.validBells(bells)) throw new IllegalArgumentException();
                 } catch(RuntimeException e) {error.setText("Проверь все 5 пар: ЧЧ:ММ, начало раньше конца, пары не пересекаются."); return;}
             }
-            settings.save(week.getSelectedItemPosition()==0?null:week.getSelectedItemPosition()==1?"odd":"even",zone.isChecked(),bells);
+            settings.save(null,zone.isChecked(),bells);
             LessonsWidget.updateAll(this); selected=LocalDate.now(settings.zone()); followToday=true; show();
         }));
         column.addView(button("Отмена",this::show));
