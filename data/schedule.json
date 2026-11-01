@@ -1,0 +1,42 @@
+{
+  "group": "ИС-232",
+  "semester": "1 семестр 2026–2027",
+  "source": { "filename": "Расписание 1 корпуса на 1 семестр 2026-2027.pdf", "page": 23, "kind": "static" },
+  "subjects": {
+    "development": { "title": "Технология разработки программного обеспечения", "shortTitle": "Технология разработки ПО", "teacher": "Бородина Е. Н." },
+    "pe": { "title": "Физическая культура", "shortTitle": "Физкультура", "teacher": "Давыдова Е. В." },
+    "english": { "title": "Иностранный язык в профессиональной деятельности", "shortTitle": "Иностранный язык", "teacher": "Фролова Ю. Э." },
+    "support": { "title": "Внедрение и поддержка компьютерных систем", "shortTitle": "Внедрение и поддержка КС", "teacher": "Бородина Е. Н." },
+    "quality": { "title": "Обеспечение качества функционирования компьютерных систем", "shortTitle": "Обеспечение качества КС", "teacher": "Бирута Т. А." },
+    "math": { "title": "Математическое моделирование", "shortTitle": "Математическое моделирование", "teacher": "Казаков Е. А." },
+    "tools": { "title": "Инструментальные средства разработки программного обеспечения", "shortTitle": "Инструментальные средства", "teacher": "Гладких А. В." }
+  },
+  "lessons": [
+    { "day": 1, "slot": 3, "subject": "development", "room": "106" },
+    { "day": 1, "slot": 4, "subject": "pe", "room": "Тренажёрный зал" },
+    { "day": 2, "slot": 3, "subject": "development", "room": "106" },
+    { "day": 2, "slot": 4, "subject": "development", "room": "106" },
+    { "day": 3, "slot": 3, "subject": "english", "room": "303" },
+    { "day": 3, "slot": 4, "subject": "support", "room": "106" },
+    { "day": 3, "slot": 5, "subject": "quality", "room": "311" },
+    { "day": 4, "slot": 1, "subject": "support", "room": "106" },
+    { "day": 4, "slot": 2, "subject": "math", "room": "103" },
+    { "day": 4, "slot": 3, "subject": "quality", "room": "311" },
+    { "day": 4, "slot": 4, "subject": "support", "room": "106" },
+    { "day": 5, "slot": 2, "subject": "quality", "room": "311" },
+    { "day": 5, "slot": 3, "subject": "tools", "room": "307А" },
+    { "day": 5, "slot": 4, "subject": "tools", "room": "307А" },
+    { "day": 6, "slot": 1, "subject": "development", "room": null },
+    { "day": 6, "slot": 2, "subject": "development", "room": null },
+    { "day": 6, "slot": 3, "subject": "tools", "room": null, "week": "odd" },
+    { "day": 6, "slot": 3, "subject": "math", "room": null, "week": "even" }
+  ],
+  "bellTimes": null,
+  "weekAnchor": null,
+  "notes": [
+    "Время звонков в PDF не указано.",
+    "Аудитории субботних пар в PDF не указаны.",
+    "Чётность учебной недели требует настройки.",
+    "Замены, праздники и каникулы нужно проверять отдельно."
+  ]
+}
