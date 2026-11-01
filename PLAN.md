@@ -40,5 +40,5 @@ Each completed substep gets a separate commit with a short English message.
 
 - [x] 6.1. Validate exact dates and group rows, add HTTPS loading and a dated cache.
 - [x] 6.2. Connect background sync, the daily screen, and the compact widget.
-- [ ] 6.3. Test cancellations, missing dates, remote classes, and fallback behavior.
+- [x] 6.3. Test cancellations, missing dates, remote classes, and fallback behavior.
 - [ ] 6.4. Build the update and document the live feed contract.

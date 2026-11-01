@@ -8,3 +8,7 @@ $source = Join-Path $projectRoot 'app\src\main\java\ru\is232\lessons'
 if ($LASTEXITCODE -ne 0) { throw 'Compilation failed' }
 & (Join-Path $javaBin 'java.exe') -cp $classes ru.is232.lessons.ScheduleEngineTest
 if ($LASTEXITCODE -ne 0) { throw 'Schedule checks failed' }
+$env:JAVA_HOME = Split-Path -Parent $javaBin
+if (-not $env:ANDROID_HOME -and (Test-Path "$env:LOCALAPPDATA\Android\Sdk")) { $env:ANDROID_HOME = "$env:LOCALAPPDATA\Android\Sdk" }
+& (Join-Path $projectRoot 'gradlew.bat') -p $projectRoot :app:testDebugUnitTest --console=plain
+if ($LASTEXITCODE -ne 0) { throw 'Live schedule checks failed' }
