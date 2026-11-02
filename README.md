@@ -29,6 +29,7 @@ The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Ч
 
 - The app checks on opening (with a 15-minute freshness interval) and requests background sync every 15 minutes while a network is available. Android can delay background jobs, especially in battery-saving modes.
 - Tap **Обновить с сайта** (Refresh from website) in the app or **↻** on an expanded widget to request a new fetch. Compact widgets prioritize class, time, and classroom; their header shows the source. Repeated requests are briefly throttled.
+- Compact class details use **До HH:MM** for a current class and **С HH:MM** for the next one. Classroom numbers are displayed without the extra label so they remain readable in small cells.
 - **Сайт** means an exact-date website schedule was fetched recently. **Кэш сайта** means the app is using an older successful fetch or the latest refresh failed. The timestamp is the fetch time, not the college's edit time; the endpoint does not provide an edit timestamp.
 - **Базовое** / **база** means the displayed day comes from the PDF. The app distinguishes an unpublished date, a first run, and a failed refresh. A published day with all five classes cancelled stays empty and is never filled from the PDF.
 - Remote classes marked **ДО** are excluded from on-campus classes. Saturday's baseline remains remote as requested. A dated website row can override it if the college publishes actual on-campus classes.

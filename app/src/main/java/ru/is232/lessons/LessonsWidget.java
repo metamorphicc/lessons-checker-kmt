@@ -63,8 +63,15 @@ public class LessonsWidget extends AppWidgetProvider {
                 if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"идёт":"далее");
                 views.setTextViewText(R.id.widget_status,status);
                 views.setTextViewText(R.id.widget_title,focus.shortTitle());
-                views.setTextViewText(R.id.widget_time,settings.bellLabel(focus.slot()));
-                views.setTextViewText(R.id.widget_room,ScheduleEngine.room(focus));
+                String time=settings.bellLabel(focus.slot());
+                if(compact && !settings.bells().isEmpty()) {
+                    ScheduleEngine.Bell bell=settings.bells().get(focus.slot()-1);
+                    time=(moment.current()!=null?"До ":"С ")+(moment.current()!=null?bell.end():bell.start()).format(Settings.TIME);
+                }
+                String room=ScheduleEngine.room(focus);
+                if(compact) room=focus.room()==null?"Ауд. —":focus.room().equals("Тренажёрный зал")?"Трен. зал":focus.room();
+                views.setTextViewText(R.id.widget_time,time);
+                views.setTextViewText(R.id.widget_room,room);
             } else {
                 views.setTextViewText(R.id.widget_status,compact?source+" · "+date.format(DateTimeFormatter.ofPattern("d.MM")):"ИС-232");
                 views.setTextViewText(R.id.widget_title,distance ? "Сегодня в ДО" : lessons.isEmpty() ? "Сегодня без пар" : "На сегодня всё");
