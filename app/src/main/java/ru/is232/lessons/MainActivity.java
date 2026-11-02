@@ -24,6 +24,10 @@ public class MainActivity extends Activity {
     private boolean followToday=true, editing=false;
     private boolean resumed;
     private LinearLayout column;
+    private ScrollView screen;
+    private LocalDate renderedDate;
+    private EditText[][] bellFields;
+    private Switch zoneField;
     private final Handler handler=new Handler(Looper.getMainLooper());
     private final Runnable tick=new Runnable() { public void run() {
         if (!editing) { if (followToday) selected=LocalDate.now(settings.zone()); show(); }
@@ -35,7 +39,13 @@ public class MainActivity extends Activity {
         settings=new Settings(this);
         selected=LocalDate.now(settings.zone());
         if (state!=null) { selected=LocalDate.parse(state.getString("date",selected.toString())); followToday=state.getBoolean("follow",true); }
-        show();
+        if(state!=null && state.getBoolean("editing",false)) {
+            configure();
+            String[] draft=state.getStringArray("draftTimes");
+            if(draft!=null && draft.length==10) for(int i=0;i<5;i++) for(int j=0;j<2;j++) bellFields[i][j].setText(draft[i*2+j]);
+            zoneField.setChecked(state.getBoolean("draftZone",settings.deviceZone()));
+        } else show();
+        if(state!=null) restoreScroll(state.getInt("scroll",0));
     }
     @Override protected void onResume() {
         super.onResume(); resumed=true; LiveSyncService.ensureScheduled(this);
@@ -51,6 +61,11 @@ public class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("date",selected.toString()); state.putBoolean("follow",followToday); super.onSaveInstanceState(state);
+        state.putBoolean("editing",editing); state.putInt("scroll",screen==null?0:screen.getScrollY());
+        if(editing && bellFields!=null) {
+            String[] draft=new String[10];for(int i=0;i<5;i++) for(int j=0;j<2;j++) draft[i*2+j]=bellFields[i][j].getText().toString();
+            state.putStringArray("draftTimes",draft);state.putBoolean("draftZone",zoneField.isChecked());
+        }
     }
     int dp(int value) { return Math.round(value*getResources().getDisplayMetrics().density); }
     LinearLayout vertical() { LinearLayout v=new LinearLayout(this); v.setOrientation(LinearLayout.VERTICAL); return v; }
@@ -69,6 +84,7 @@ public class MainActivity extends Activity {
     }
     void frame() {
         ScrollView scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.setBackgroundColor(PAPER);
+        screen=scroll;
         column=vertical(); column.setPadding(dp(22),dp(18),dp(22),dp(28)); scroll.addView(column);
         scroll.setOnApplyWindowInsetsListener((v,insets)->{
             v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
@@ -76,6 +92,7 @@ public class MainActivity extends Activity {
         }); setContentView(scroll); scroll.requestApplyInsets();
     }
     void show() {
+        int previousScroll=!editing && selected.equals(renderedDate) && screen!=null ? screen.getScrollY() : 0;
         editing=false; frame();
         LinearLayout heading=new LinearLayout(this); heading.setGravity(Gravity.CENTER_VERTICAL);
         TextView title=text("Пары / ИС-232",20,INK,true);
@@ -94,7 +111,8 @@ public class MainActivity extends Activity {
         column.addView(text(day.badge(settings.zone()),13,MUTED,false));
         if("base".equals(day.source())) column.addView(text("Замены не подтверждены. Это расписание из PDF.",13,MUTED,false));
         else column.addView(text("Сайт указывает преподавателей и аудитории. Названия предметов не передаются.",13,MUTED,false));
-        column.addView(button(ScheduleRepository.isRefreshing() ? "Проверяем сайт…" : "Обновить с сайта",()->refreshLive(true)));
+        Button refresh=button(ScheduleRepository.isRefreshing() ? "Проверяем сайт…" : "Обновить с сайта",()->refreshLive(true));
+        refresh.setEnabled(!ScheduleRepository.isRefreshing());column.addView(refresh);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());
         boolean isToday=selected.equals(LocalDate.now(settings.zone()));
@@ -122,7 +140,9 @@ public class MainActivity extends Activity {
         gap(8);
         column.addView(button("Добавить виджет",this::pinWidget));
         column.addView(text("Сайт КМТ + базовое расписание, 1 семестр 2026–2027.\nОбновление при открытии и в фоне. Android может задерживать фоновые запросы.\nЧасовой пояс: "+settings.zone().getId(),12,MUTED,false));
+        renderedDate=selected;restoreScroll(previousScroll);
     }
+    void restoreScroll(int y) {ScrollView target=screen;target.post(()->target.scrollTo(0,y));}
     void pinWidget() {
         AppWidgetManager manager=getSystemService(AppWidgetManager.class);
         if (manager.isRequestPinAppWidgetSupported()) manager.requestPinAppWidget(new ComponentName(this,LessonsWidget.class),null,null);
@@ -141,10 +161,12 @@ public class MainActivity extends Activity {
             })); gap(16);
         }
         Switch zone=new Switch(this); zone.setText("Часовой пояс телефона"); zone.setChecked(settings.deviceZone()); zone.setMinHeight(dp(48)); column.addView(zone);
+        zoneField=zone;
         column.addView(text("По умолчанию: Новосибирск (UTC+7).",13,MUTED,false)); gap(16);
         column.addView(text("Звонки",22,INK,true));
         column.addView(text("Звонки уже заполнены по твоему скриншоту. Можно изменить все пять пар в формате 08:30 или очистить все поля, чтобы оставить только номера.",14,MUTED,false));
         EditText[][] fields=new EditText[5][2];
+        bellFields=fields;
         for(int i=0;i<5;i++) {
             column.addView(text((i+1)+" пара",14,INK,true));
             LinearLayout row=new LinearLayout(this);
