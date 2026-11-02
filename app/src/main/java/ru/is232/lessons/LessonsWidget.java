@@ -47,19 +47,26 @@ public class LessonsWidget extends AppWidgetProvider {
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,now.toLocalTime(),settings.bells());
         PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         for(int id:ids) {
+            int height=manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,90);
+            boolean compact=height<160 || (c.getResources().getConfiguration().fontScale>1.2f && height<180);
             RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
+            views.setViewVisibility(R.id.widget_refresh,compact?android.view.View.GONE:android.view.View.VISIBLE);
+            views.setViewVisibility(R.id.widget_footer,compact?android.view.View.GONE:android.view.View.VISIBLE);
+            views.setInt(R.id.widget_title,"setMaxLines",compact?1:2);
+            String source="base".equals(day.source())?"База":"cache".equals(day.source())?"Кэш":"Сайт";
             boolean distance=day.remoteOnly();
             ScheduleEngine.Lesson focus=moment.current()!=null ? moment.current() : moment.next();
             boolean unknownBells=!lessons.isEmpty() && settings.bells().isEmpty();
             if(unknownBells) focus=lessons.get(0);
             if(focus!=null) {
                 String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
+                if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"сейчас":"далее");
                 views.setTextViewText(R.id.widget_status,status);
                 views.setTextViewText(R.id.widget_title,focus.shortTitle());
                 views.setTextViewText(R.id.widget_time,settings.bellLabel(focus.slot()));
                 views.setTextViewText(R.id.widget_room,ScheduleEngine.room(focus));
             } else {
-                views.setTextViewText(R.id.widget_status,"ИС-232");
+                views.setTextViewText(R.id.widget_status,compact?source+" · "+date.format(DateTimeFormatter.ofPattern("d.MM")):"ИС-232");
                 views.setTextViewText(R.id.widget_title,distance ? "Сегодня в ДО" : lessons.isEmpty() ? "Сегодня без пар" : "На сегодня всё");
                 views.setTextViewText(R.id.widget_time,"Полный список —");
                 views.setTextViewText(R.id.widget_room,"по нажатию");
