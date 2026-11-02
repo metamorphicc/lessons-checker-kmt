@@ -25,6 +25,7 @@ public class MainActivity extends Activity {
     private boolean resumed;
     private LinearLayout column;
     private ScrollView screen;
+    private Integer pendingScroll;
     private LocalDate renderedDate;
     private EditText[][] bellFields;
     private Switch zoneField;
@@ -92,7 +93,7 @@ public class MainActivity extends Activity {
         }); setContentView(scroll); scroll.requestApplyInsets();
     }
     void show() {
-        int previousScroll=!editing && selected.equals(renderedDate) && screen!=null ? screen.getScrollY() : 0;
+        int previousScroll=!editing && selected.equals(renderedDate) && screen!=null ? pendingScroll!=null?pendingScroll:screen.getScrollY() : 0;
         editing=false; frame();
         LinearLayout heading=new LinearLayout(this); heading.setGravity(Gravity.CENTER_VERTICAL);
         TextView title=text("Пары / ИС-232",20,INK,true);
@@ -142,7 +143,16 @@ public class MainActivity extends Activity {
         column.addView(text("Сайт КМТ + базовое расписание, 1 семестр 2026–2027.\nОбновление при открытии и в фоне. Android может задерживать фоновые запросы.\nЧасовой пояс: "+settings.zone().getId(),12,MUTED,false));
         renderedDate=selected;restoreScroll(previousScroll);
     }
-    void restoreScroll(int y) {ScrollView target=screen;target.post(()->target.scrollTo(0,y));}
+    void restoreScroll(int y) {
+        ScrollView target=screen;pendingScroll=y;
+        target.getViewTreeObserver().addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
+            public boolean onPreDraw() {
+                target.getViewTreeObserver().removeOnPreDrawListener(this);target.scrollTo(0,y);
+                if(target==screen) pendingScroll=null;
+                return true;
+            }
+        });
+    }
     void pinWidget() {
         AppWidgetManager manager=getSystemService(AppWidgetManager.class);
         if (manager.isRequestPinAppWidgetSupported()) manager.requestPinAppWidget(new ComponentName(this,LessonsWidget.class),null,null);

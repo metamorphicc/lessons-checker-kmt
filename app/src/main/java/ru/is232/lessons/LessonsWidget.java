@@ -60,7 +60,7 @@ public class LessonsWidget extends AppWidgetProvider {
             if(unknownBells) focus=lessons.get(0);
             if(focus!=null) {
                 String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
-                if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"сейчас":"далее");
+                if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"идёт":"далее");
                 views.setTextViewText(R.id.widget_status,status);
                 views.setTextViewText(R.id.widget_title,focus.shortTitle());
                 views.setTextViewText(R.id.widget_time,settings.bellLabel(focus.slot()));
