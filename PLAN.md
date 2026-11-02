@@ -42,3 +42,10 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 6.2. Connect background sync, the daily screen, and the compact widget.
 - [x] 6.3. Test cancellations, missing dates, remote classes, and fallback behavior.
 - [x] 6.4. Build version 1.2 and document the live feed contract: 36 time checks, 25 live-data tests, release lint, Java HTTPS smoke check, and APK signature verification.
+
+## 7. Native UI audit and fixes
+
+- [x] 7.1. Audit UI with Hallmark and reproduce issues on Android 16.
+- [x] 7.2. Preserve scrolling and unsaved settings across updates/recreation; disable in-flight refresh.
+- [x] 7.3. Correct launcher minimum spans and compact text sizing; remove undersized compact controls.
+- [x] 7.4. Verify fixes with native UI instrumentation, rerun 61 checks and lint, and build version 1.3.

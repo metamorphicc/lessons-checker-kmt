@@ -1,0 +1,56 @@
+{
+  "mode": "widget",
+  "widthDp": 90,
+  "heightDp": 90,
+  "fontScale": 1.2999999523162842,
+  "items": [
+    {
+      "text": "Сейчас · 3",
+      "width": 74,
+      "height": 19,
+      "textSize": 14,
+      "layoutHeight": 19,
+      "available": 19
+    },
+    {
+      "text": "↻",
+      "width": 0,
+      "height": 0,
+      "textSize": 25,
+      "layoutHeight": 0,
+      "available": 0
+    },
+    {
+      "text": "Технология разработки ПО",
+      "width": 74,
+      "height": 22,
+      "textSize": 14,
+      "layoutHeight": 19,
+      "available": 22
+    },
+    {
+      "text": "12:20–13:50",
+      "width": 74,
+      "height": 19,
+      "textSize": 14,
+      "layoutHeight": 19,
+      "available": 19
+    },
+    {
+      "text": "Ауд. 106 К1",
+      "width": 74,
+      "height": 22,
+      "textSize": 16,
+      "layoutHeight": 22,
+      "available": 22
+    },
+    {
+      "text": "Сайт 2.11 12:30",
+      "width": 0,
+      "height": 0,
+      "textSize": 14,
+      "layoutHeight": 0,
+      "available": 0
+    }
+  ]
+}

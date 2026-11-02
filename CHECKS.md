@@ -9,7 +9,9 @@
 
 ## Verification limits
 
-No Android phone or configured emulator was available. Activity startup, rendering on a real screen, widget pinning, and scheduled updates on a specific device have not been verified. A successful build and logic checks do not establish those results.
+Version 1.3 was installed and launched on an Android 16 x86_64 emulator. The launcher pin dialog, native layouts at 320/375/414/768 dp, compact RemoteViews, scroll retention, draft restoration, and loading state were checked. Evidence is linked from [the UI audit](docs/ui-audit-2026-11-02.md).
+
+No physical Android phone was available. OEM launcher sizing and background delivery on a physical device remain unverified. The visual tests use controlled local data rather than claiming a live college response.
 
 ## Device checks
 
@@ -17,9 +19,9 @@ No Android phone or configured emulator was available. Activity startup, renderi
 2. Check the class times in Settings against the supplied screenshot.
 3. Open November 2, 2026: the dated website row should show classes 3/4 with Бородина and Давыдова. Browse an unpublished date and verify the **Базовое** warning. On an offline first run, the baseline has Monday 3/4, Tuesday 3/4, Wednesday 3/4/5, Thursday 1/2/3/4, Friday 2/3/4, Saturday remote, Sunday free.
 4. Add the 2 × 2 widget and compare its current or next class, time, and classroom with the app. Long names are shortened; tapping opens the full schedule. After upgrading, remove and re-add the old widget.
-5. Allow exact updates in Settings if Android offers the option. Check the next scheduled class transition and the manual **↻** button.
+5. Allow exact updates in Settings if Android offers the option. Check the next scheduled class transition and the app's refresh button. Expanded widgets also expose **↻**.
 6. Check the widget after a reboot and a time zone change.
 7. Fetch a dated day, go offline, and refresh again. Check the **Кэш сайта** label, retained classes, and last successful fetch time. Reconnect and refresh to recover.
-8. Verify background sync on the phone with the app closed. Check that **↻** eventually refreshes the website data as well as the widget display.
+8. Verify background sync on the phone with the app closed. Check that the refresh action updates website data as well as the display.
 
 Updates depend on the college publishing exact dates and Android allowing background work. Undated rows and stale weekday names never establish a current schedule.
