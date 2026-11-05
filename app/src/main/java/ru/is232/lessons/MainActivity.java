@@ -138,30 +138,19 @@ public class MainActivity extends Activity {
     void selectDate(LocalDate date) {
         selected=date; followToday=date.equals(LocalDate.now(settings.zone())); sourceExpanded=false; show();
     }
-    void calendar() {
+    void dayNavigation() {
         LinearLayout nav=row();
-        TextView year=text(Integer.toString(selected.getYear()),14,MUTED,true);
-        fill(nav,year);
-        Button today=button("Сегодня",()->selectDate(LocalDate.now(settings.zone()))); today.setBackground(controlBackground(PAPER,12)); nav.addView(today);
-        nav.addView(icon(R.drawable.ic_previous,"Предыдущая неделя",()->selectDate(selected.minusWeeks(1))));
-        nav.addView(icon(R.drawable.ic_next,"Следующая неделя",()->selectDate(selected.plusWeeks(1)))); column.addView(nav);
-        HorizontalScrollView week=new HorizontalScrollView(this); week.setHorizontalScrollBarEnabled(false);
-        LinearLayout dates=row(); LocalDate monday=ScheduleEngine.monday(selected);
-        int width=Math.max(48,(Math.min(getResources().getConfiguration().screenWidthDp,600)-40)/7);
-        String[] labels={"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};
-        for(int i=0;i<7;i++) {
-            LocalDate date=monday.plusDays(i); boolean chosen=date.equals(selected);
-            LinearLayout cell=vertical(); cell.setGravity(Gravity.CENTER); cell.setPadding(dp(2),dp(8),dp(2),dp(8));
-            cell.setBackground(controlBackground(chosen?INK:PAPER,16));
-            TextView label=text(labels[i],10,chosen?SURFACE:MUTED,true); label.setGravity(Gravity.CENTER);
-            TextView number=text(Integer.toString(date.getDayOfMonth()),19,chosen?SURFACE:date.equals(LocalDate.now(settings.zone()))?ACCENT:INK,true);number.setGravity(Gravity.CENTER);
-            cell.addView(label); cell.addView(number); cell.setMinimumHeight(dp(72)); cell.setFocusable(true);cell.setClickable(true);
-            cell.setContentDescription(date.format(DateTimeFormatter.ofPattern("EEEE, d MMMM",RU))+(chosen?", выбрано":""));
-            cell.setSelected(chosen); cell.setOnClickListener(v->selectDate(date));
-            dates.addView(cell,new LinearLayout.LayoutParams(dp(width),-2));
+        nav.addView(icon(R.drawable.ic_previous,"Предыдущий день",()->selectDate(selected.minusDays(1))));
+        if(selected.equals(LocalDate.now(settings.zone()))) {
+            TextView today=text("Сегодня",14,MUTED,true);today.setGravity(Gravity.CENTER);
+            fill(nav,today);
+        } else {
+            Button today=button("На сегодня",()->selectDate(LocalDate.now(settings.zone())));
+            today.setContentDescription("Вернуться к сегодняшнему дню");
+            today.setBackground(controlBackground(PAPER,12));fill(nav,today);
         }
-        week.addView(dates);column.addView(week);
-        week.post(()->week.smoothScrollTo(dp(width)*Math.max(0,selected.getDayOfWeek().getValue()-4),0));
+        nav.addView(icon(R.drawable.ic_next,"Следующий день",()->selectDate(selected.plusDays(1))));
+        column.addView(nav);
     }
     void source(ScheduleRepository.Day day) {
         boolean base="base".equals(day.source()), cache="cache".equals(day.source());
@@ -189,7 +178,7 @@ public class MainActivity extends Activity {
         fill(heading,text("Расписание",16,INK,true)); heading.addView(icon(R.drawable.ic_settings,"Настройки",this::configure));column.addView(heading);gap(12);
         TextView date=text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),32,INK,true);date.setLetterSpacing(-0.035f);column.addView(date);
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU))+" · ИС-232",13,MUTED,false));gap(16);
-        calendar();gap(8);
+        dayNavigation();gap(8);
         ScheduleRepository.Day day=ScheduleRepository.day(this,selected,settings);source(day);gap(12);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());

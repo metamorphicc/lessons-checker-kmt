@@ -22,7 +22,10 @@ Keep the existing Activity, settings, data repository and RemoteViews widget.
 
 ## Main screen
 
-Compact header, large date, weekly date picker, current/next lesson, grouped agenda.
+Compact header, large date, daily navigation, current/next lesson, grouped agenda.
+Arrow controls always move by one calendar day. On today's date, the center label
+is non-interactive. On another date, show a secondary "На сегодня" return action.
+Do not reintroduce a week pager or a second date strip beside the daily pager.
 Place lesson times in a separate left column. Group the day's lessons on one white
 surface with inset separators. Expand source details on demand; always keep the
 source and stale/failure state visible in the collapsed label.
