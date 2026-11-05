@@ -98,7 +98,7 @@ public class LessonsWidget extends AppWidgetProvider {
         }
         views.setViewVisibility(R.id.widget_refresh,compact?android.view.View.GONE:android.view.View.VISIBLE);
         views.setViewVisibility(R.id.widget_footer,compact?android.view.View.GONE:android.view.View.VISIBLE);
-        views.setInt(R.id.widget_title,"setMaxLines",tiny || (compact && !"base".equals(day.source())) || (c.getResources().getConfiguration().fontScale>1.2f && cardHeight<160)?1:2);
+        views.setInt(R.id.widget_title,"setMaxLines",tiny || (c.getResources().getConfiguration().fontScale>1.2f && cardHeight<160)?1:2);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         String source="base".equals(day.source())?"База":"cache".equals(day.source())?"Кэш":"Сайт";
@@ -108,14 +108,11 @@ public class LessonsWidget extends AppWidgetProvider {
         if(unknownBells) focus=lessons.get(0);
         if(focus!=null) {
             String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
-            if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"идёт":"далее");
+            if(compact) status=source+" · "+focus.slot()+" пара";
+            if(compact && !"base".equals(day.source())) views.setInt(R.id.widget_title,"setMaxLines",1);
             views.setTextViewText(R.id.widget_status,status);
             views.setTextViewText(R.id.widget_title,focus.shortTitle());
-            String time=settings.bellLabel(focus.slot());
-            if(compact && !settings.bells().isEmpty()) {
-                ScheduleEngine.Bell bell=settings.bells().get(focus.slot()-1);
-                time=(moment.current()!=null?"До ":"С ")+(moment.current()!=null?bell.end():bell.start()).format(Settings.TIME);
-            }
+            String time=compact && unknownBells?"Без звонков":settings.bellLabel(focus.slot());
             String room=ScheduleEngine.room(focus);
             if(compact) room=focus.room()==null?"Ауд. —":focus.room().equals("Тренажёрный зал")?"Трен. зал":focus.room();
             views.setTextViewText(R.id.widget_time,time);
