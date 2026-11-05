@@ -8,13 +8,13 @@ An Android app with a 2 × 2 home screen widget for group ИС-232. It loads dat
 2. If Android asks, allow your file manager to install the APK and finish installation.
 3. Open **Пары · ИС-232**. Class times are already filled in from the supplied screenshot.
 4. Tap **Добавить виджет** (Add widget). You can also long-press an empty area of the home screen, open **Widgets**, and select **Пары · ИС-232**. The default size is **2 × 2 cells**; it can be enlarged.
-5. In **Настройки** (Settings), tap **Разрешить точные обновления** (Allow exact updates), if available. Android's Alarms & reminders permission allows the widget to switch classes at the scheduled time. Without it, updates may be delayed. Tap a compact widget to open the app and refresh there. Expanded widgets also have a **↻** button and a last-fetch footer.
+5. In **Настройки** (Settings), tap **Разрешить обновления** (Allow updates), if available. Android's Alarms & reminders permission allows the widget to switch classes at the scheduled time. Without it, updates may be delayed. Tap a compact widget to open the app and refresh there. Expanded widgets also have a **↻** button and a last-fetch footer.
 
 When upgrading from version 1.0, install the APK over the existing app, then remove and re-add the widget. Your launcher may otherwise retain its previous large size. App settings are preserved.
 
 Long labels are shortened in the widget. Tap it to read the full schedule.
 
-The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Часовой пояс телефона** (Phone time zone) in Settings and save.
+The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Как на телефоне** (Use phone time zone) in Settings and save.
 
 ## Schedule
 
@@ -28,10 +28,10 @@ The default time zone is Novosibirsk (UTC+7). For another time zone, enable **Ч
 ## Live updates and offline behavior
 
 - The app checks on opening (with a 15-minute freshness interval) and requests background sync every 15 minutes while a network is available. Android can delay background jobs, especially in battery-saving modes.
-- Tap **Обновить с сайта** (Refresh from website) in the app or **↻** on an expanded widget to request a new fetch. Compact widgets prioritize class, time, and classroom; their header shows the source. Repeated requests are briefly throttled.
+- Tap the refresh icon beside the source label in the app or **↻** on an expanded widget to request a new fetch. Compact widgets prioritize class, time, and classroom; their header shows the source. Repeated requests are briefly throttled.
 - Compact class details use **До HH:MM** for a current class and **С HH:MM** for the next one. Classroom numbers are displayed without the extra label so they remain readable in small cells.
-- **Сайт** means an exact-date website schedule was fetched recently. **Кэш сайта** means the app is using an older successful fetch or the latest refresh failed. The timestamp is the fetch time, not the college's edit time; the endpoint does not provide an edit timestamp.
-- **Базовое** / **база** means the displayed day comes from the PDF. The app distinguishes an unpublished date, a first run, and a failed refresh. A published day with all five classes cancelled stays empty and is never filled from the PDF.
+- **Сайт** means an exact-date website schedule was fetched recently. **Кэш** means the app is using an older successful fetch or the latest refresh failed. Tap the source label to see the fetch timestamp and details. The timestamp is the fetch time, not the college's edit time; the endpoint does not provide an edit timestamp.
+- **База** means the displayed day comes from the PDF. The app distinguishes an unpublished date, a first run, and a failed refresh. A published day with all five classes cancelled stays empty and is never filled from the PDF.
 - Remote classes marked **ДО** are excluded from on-campus classes. Saturday's baseline remains remote as requested. A dated website row can override it if the college publishes actual on-campus classes.
 - Only dated ИС-232 rows are cached. Failed downloads and invalid responses preserve the last valid snapshot. A successful response replaces the snapshot, including removal of dates no longer published.
 
@@ -63,3 +63,15 @@ See the [Android alarm documentation](https://developer.android.com/develop/back
 ## UI verification
 
 Version 1.3 fixes the launcher span, compact text clipping, automatic scroll resets, and settings drafts lost during Activity recreation. The Android 16 AOSP launcher was checked at a 320 dp screen width and now offers 2 × 2 cells. Compact RemoteViews were checked at 90 × 90 dp with font scale 1.3. See [the UI audit and evidence](docs/ui-audit-2026-11-02.md). Physical launchers can use different cell dimensions.
+
+## Interface
+
+Version 1.4 introduces a light native agenda with a weekly date picker, a current
+or next class summary, and grouped rows with a dedicated time column. Settings
+and the 2 × 2 widget share the same colors and bundled Manrope typeface. The
+source label stays visible; tap it for freshness and fallback details. Use the
+arrow buttons to move between weeks, or **Сегодня** to return to today.
+
+The data loading, exact-date matching, cache and baseline fallback are unchanged.
+[DESIGN.md](DESIGN.md) records the native design system. Manrope's SIL Open Font
+License is included in [docs/licenses/Manrope-OFL.txt](docs/licenses/Manrope-OFL.txt).

@@ -1,0 +1,7 @@
+{
+  "mode": "validation",
+  "layoutIssues": [],
+  "invalidTimeRejected": true,
+  "validSaveReturnsToAgenda": true,
+  "missingBellsExplained": true
+}

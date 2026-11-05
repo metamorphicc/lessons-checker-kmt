@@ -1,0 +1,34 @@
+{
+  "screen-320": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "screen-375": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "screen-414": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "screen-768": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "settings-320": {
+    "mode": "settings",
+    "layoutIssues": []
+  },
+  "screen-font13": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "settings-font13": {
+    "mode": "settings",
+    "layoutIssues": []
+  },
+  "baseline-font13": {
+    "mode": "screen",
+    "layoutIssues": []
+  }
+}

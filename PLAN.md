@@ -49,3 +49,10 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 7.2. Preserve scrolling and unsaved settings across updates/recreation; disable in-flight refresh.
 - [x] 7.3. Correct launcher minimum spans and compact text sizing; remove undersized compact controls.
 - [x] 7.4. Verify fixes with native UI instrumentation, rerun 61 checks and lint, and build version 1.3.
+
+## 8. Interface redesign
+
+- [x] 8.1. Establish shared colors and typography; redesign the daily agenda and date navigation.
+- [x] 8.2. Restyle settings and the 2 × 2 widget without changing schedule retrieval.
+- [x] 8.3. Handle modern and legacy back navigation and missing bell times.
+- [x] 8.4. Verify native layouts, settings flows and release version 1.4.

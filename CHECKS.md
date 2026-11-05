@@ -17,7 +17,7 @@ No physical Android phone was available. OEM launcher sizing and background deli
 
 1. Install the APK and open **Пары · ИС-232**.
 2. Check the class times in Settings against the supplied screenshot.
-3. Open November 2, 2026: the dated website row should show classes 3/4 with Бородина and Давыдова. Browse an unpublished date and verify the **Базовое** warning. On an offline first run, the baseline has Monday 3/4, Tuesday 3/4, Wednesday 3/4/5, Thursday 1/2/3/4, Friday 2/3/4, Saturday remote, Sunday free.
+3. Open November 2, 2026: the dated website row should show classes 3/4 with Бородина and Давыдова. Browse an unpublished date and verify the **База** warning. On an offline first run, the baseline has Monday 3/4, Tuesday 3/4, Wednesday 3/4/5, Thursday 1/2/3/4, Friday 2/3/4, Saturday remote, Sunday free.
 4. Add the 2 × 2 widget and compare its current or next class, time, and classroom with the app. Long names are shortened; tapping opens the full schedule. After upgrading, remove and re-add the old widget.
 5. Allow exact updates in Settings if Android offers the option. Check the next scheduled class transition and the app's refresh button. Expanded widgets also expose **↻**.
 6. Check the widget after a reboot and a time zone change.
@@ -25,3 +25,11 @@ No physical Android phone was available. OEM launcher sizing and background deli
 8. Verify background sync on the phone with the app closed. Check that the refresh action updates website data as well as the display.
 
 Updates depend on the college publishing exact dates and Android allowing background work. Undated rows and stale weekday names never establish a current schedule.
+
+## Version 1.4 redesign
+
+The release APK was installed on Android 16. Native layouts at 320/375/414/768 dp,
+font scale 1.3, minimum-size widget text, settings validation, system back and week
+navigation were verified. Scroll retention, draft restoration and refresh loading
+checks passed. All 61 existing schedule checks, release lint and APK signature
+verification passed. See [redesign evidence](docs/ui-redesign-2026-11-05.md).
