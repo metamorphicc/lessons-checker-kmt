@@ -6,6 +6,8 @@ import android.content.*;
 import android.os.Bundle;
 import android.os.Build;
 import android.widget.RemoteViews;
+import android.util.SizeF;
+import android.util.TypedValue;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -45,44 +47,26 @@ public class LessonsWidget extends AppWidgetProvider {
         ScheduleRepository.Day day=ScheduleRepository.day(c,date,settings);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,now.toLocalTime(),settings.bells());
-        PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
         for(int id:ids) {
-            int height=manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,90);
-            boolean compact=height<160 || (c.getResources().getConfiguration().fontScale>1.2f && height<180);
-            RemoteViews views=new RemoteViews(c.getPackageName(),R.layout.widget);
-            views.setViewVisibility(R.id.widget_refresh,compact?android.view.View.GONE:android.view.View.VISIBLE);
-            views.setViewVisibility(R.id.widget_footer,compact?android.view.View.GONE:android.view.View.VISIBLE);
-            views.setInt(R.id.widget_title,"setMaxLines",compact?1:2);
-            String source="base".equals(day.source())?"База":"cache".equals(day.source())?"Кэш":"Сайт";
-            boolean distance=day.remoteOnly();
-            ScheduleEngine.Lesson focus=moment.current()!=null ? moment.current() : moment.next();
-            boolean unknownBells=!lessons.isEmpty() && settings.bells().isEmpty();
-            if(unknownBells) focus=lessons.get(0);
-            if(focus!=null) {
-                String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
-                if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"идёт":"далее");
-                views.setTextViewText(R.id.widget_status,status);
-                views.setTextViewText(R.id.widget_title,focus.shortTitle());
-                String time=settings.bellLabel(focus.slot());
-                if(compact && !settings.bells().isEmpty()) {
-                    ScheduleEngine.Bell bell=settings.bells().get(focus.slot()-1);
-                    time=(moment.current()!=null?"До ":"С ")+(moment.current()!=null?bell.end():bell.start()).format(Settings.TIME);
+            Bundle options=manager.getAppWidgetOptions(id);
+            if(Build.VERSION.SDK_INT>=31) {
+                ArrayList<SizeF> sizes=options.getParcelableArrayList(AppWidgetManager.OPTION_APPWIDGET_SIZES);
+                if(sizes!=null && !sizes.isEmpty()) {
+                    Map<SizeF,RemoteViews> layouts=new LinkedHashMap<>();
+                    for(SizeF size:sizes) {
+                        if(size.getWidth()>0 && size.getHeight()>0 && layouts.size()<16)
+                            layouts.put(size,render(c,Math.round(size.getWidth()),Math.round(size.getHeight()),now,settings,day,moment));
+                    }
+                    if(!layouts.isEmpty()) {manager.updateAppWidget(id,new RemoteViews(layouts));continue;}
                 }
-                String room=ScheduleEngine.room(focus);
-                if(compact) room=focus.room()==null?"Ауд. —":focus.room().equals("Тренажёрный зал")?"Трен. зал":focus.room();
-                views.setTextViewText(R.id.widget_time,time);
-                views.setTextViewText(R.id.widget_room,room);
-            } else {
-                views.setTextViewText(R.id.widget_status,compact?source+" · "+date.format(DateTimeFormatter.ofPattern("d.MM")):"ИС-232");
-                views.setTextViewText(R.id.widget_title,distance ? "Сегодня в ДО" : lessons.isEmpty() ? "Сегодня без пар" : "На сегодня всё");
-                views.setTextViewText(R.id.widget_time,"Полный список —");
-                views.setTextViewText(R.id.widget_room,"по нажатию");
             }
-            views.setTextViewText(R.id.widget_footer,day.widgetBadge(settings.zone(),date));
-            views.setContentDescription(R.id.widget_footer,date.toString()+". "+day.badge(settings.zone()));
-            views.setOnClickPendingIntent(R.id.widget_root,open);
-            views.setOnClickPendingIntent(R.id.widget_refresh,manualIntent(c));
-            manager.updateAppWidget(id,views);
+            int minWidth=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_WIDTH,130);
+            int minHeight=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT,130);
+            int maxWidth=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_WIDTH,minWidth);
+            int maxHeight=options.getInt(AppWidgetManager.OPTION_APPWIDGET_MAX_HEIGHT,minHeight);
+            RemoteViews portrait=render(c,minWidth,maxHeight,now,settings,day,moment);
+            RemoteViews landscape=render(c,maxWidth,minHeight,now,settings,day,moment);
+            manager.updateAppWidget(id,new RemoteViews(landscape,portrait));
         }
         ZonedDateTime boundary=date.plusDays(1).atStartOfDay(settings.zone());
         for(ScheduleEngine.Lesson lesson:lessons) {
@@ -101,4 +85,52 @@ public class LessonsWidget extends AppWidgetProvider {
         }
         alarms.setAndAllowWhileIdle(AlarmManager.RTC,trigger,refreshIntent(c));
     }
+    static RemoteViews render(Context c,int width,int height,ZonedDateTime now,Settings settings,
+                              ScheduleRepository.Day day,ScheduleEngine.Moment moment) {
+        width=Math.max(1,width);height=Math.max(1,height);
+        boolean compact=width<210 || height<170;
+        int cardHeight=compact?Math.min(width,height):height;
+        boolean tiny=Math.min(width,cardHeight)<112;
+        RemoteViews views=new RemoteViews(c.getPackageName(),tiny?R.layout.widget_tiny:R.layout.widget);
+        if(Build.VERSION.SDK_INT>=31) {
+            views.setViewLayoutWidth(R.id.widget_root,width,TypedValue.COMPLEX_UNIT_DIP);
+            views.setViewLayoutHeight(R.id.widget_root,cardHeight,TypedValue.COMPLEX_UNIT_DIP);
+        }
+        views.setViewVisibility(R.id.widget_refresh,compact?android.view.View.GONE:android.view.View.VISIBLE);
+        views.setViewVisibility(R.id.widget_footer,compact?android.view.View.GONE:android.view.View.VISIBLE);
+        views.setInt(R.id.widget_title,"setMaxLines",tiny || (compact && !"base".equals(day.source())) || (c.getResources().getConfiguration().fontScale>1.2f && cardHeight<160)?1:2);
+        List<ScheduleEngine.Lesson> lessons=day.lessons();
+        PendingIntent open=PendingIntent.getActivity(c,1,new Intent(c,MainActivity.class),PendingIntent.FLAG_UPDATE_CURRENT|PendingIntent.FLAG_IMMUTABLE);
+        String source="base".equals(day.source())?"База":"cache".equals(day.source())?"Кэш":"Сайт";
+        boolean distance=day.remoteOnly();
+        ScheduleEngine.Lesson focus=moment.current()!=null ? moment.current() : moment.next();
+        boolean unknownBells=!lessons.isEmpty() && settings.bells().isEmpty();
+        if(unknownBells) focus=lessons.get(0);
+        if(focus!=null) {
+            String status=unknownBells ? "Сегодня" : (moment.current()!=null ? "Сейчас" : "Далее")+" · "+focus.slot();
+            if(compact) status=source+" · "+(unknownBells?"сегодня":moment.current()!=null?"идёт":"далее");
+            views.setTextViewText(R.id.widget_status,status);
+            views.setTextViewText(R.id.widget_title,focus.shortTitle());
+            String time=settings.bellLabel(focus.slot());
+            if(compact && !settings.bells().isEmpty()) {
+                ScheduleEngine.Bell bell=settings.bells().get(focus.slot()-1);
+                time=(moment.current()!=null?"До ":"С ")+(moment.current()!=null?bell.end():bell.start()).format(Settings.TIME);
+            }
+            String room=ScheduleEngine.room(focus);
+            if(compact) room=focus.room()==null?"Ауд. —":focus.room().equals("Тренажёрный зал")?"Трен. зал":focus.room();
+            views.setTextViewText(R.id.widget_time,time);
+            views.setTextViewText(R.id.widget_room,room);
+        } else {
+            views.setTextViewText(R.id.widget_status,compact?source+" · "+now.toLocalDate().format(DateTimeFormatter.ofPattern("d.MM")):"ИС-232");
+            views.setTextViewText(R.id.widget_title,distance ? "Сегодня в ДО" : lessons.isEmpty() ? "Сегодня без пар" : "На сегодня всё");
+            views.setTextViewText(R.id.widget_time,"Открыть расписание");
+            views.setTextViewText(R.id.widget_room,"");
+        }
+        views.setTextViewText(R.id.widget_footer,day.widgetBadge(settings.zone(),now.toLocalDate()));
+        views.setContentDescription(R.id.widget_footer,now.toLocalDate().toString()+". "+day.badge(settings.zone()));
+        views.setOnClickPendingIntent(R.id.widget_root,open);
+        views.setOnClickPendingIntent(R.id.widget_refresh,manualIntent(c));
+        return views;
+    }
+
 }
