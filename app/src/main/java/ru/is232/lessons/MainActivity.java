@@ -152,6 +152,25 @@ public class MainActivity extends Activity {
         nav.addView(icon(R.drawable.ic_next,"Следующий день",()->selectDate(selected.plusDays(1))));
         column.addView(nav);
     }
+    void dateStrip() {
+        HorizontalScrollView strip=new HorizontalScrollView(this);strip.setHorizontalScrollBarEnabled(false);
+        LinearLayout dates=row();LocalDate monday=ScheduleEngine.monday(selected);
+        int width=Math.max(48,(Math.min(getResources().getConfiguration().screenWidthDp,600)-40)/7);
+        String[] labels={"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};
+        for(int i=0;i<7;i++) {
+            LocalDate date=monday.plusDays(i);boolean chosen=date.equals(selected);
+            LinearLayout cell=vertical();cell.setGravity(Gravity.CENTER);cell.setPadding(dp(2),dp(8),dp(2),dp(8));
+            cell.setBackground(controlBackground(chosen?INK:PAPER,16));
+            TextView label=text(labels[i],10,chosen?SURFACE:MUTED,true);label.setGravity(Gravity.CENTER);
+            TextView number=text(Integer.toString(date.getDayOfMonth()),19,chosen?SURFACE:date.equals(LocalDate.now(settings.zone()))?ACCENT:INK,true);number.setGravity(Gravity.CENTER);
+            cell.addView(label);cell.addView(number);cell.setMinimumHeight(dp(72));cell.setFocusable(true);cell.setClickable(true);
+            cell.setContentDescription(date.format(DateTimeFormatter.ofPattern("EEEE, d MMMM",RU))+(chosen?", выбрано":""));
+            cell.setSelected(chosen);cell.setOnClickListener(v->selectDate(date));
+            dates.addView(cell,new LinearLayout.LayoutParams(dp(width),-2));
+        }
+        strip.addView(dates);column.addView(strip);
+        strip.post(()->strip.scrollTo(dp(width)*Math.max(0,selected.getDayOfWeek().getValue()-4),0));
+    }
     void source(ScheduleRepository.Day day) {
         boolean base="base".equals(day.source()), cache="cache".equals(day.source());
         String label=base ? "База · замены не подтверждены" : cache ? "Кэш · сохранённое расписание" : "Сайт КМТ · обновлено";
@@ -178,7 +197,7 @@ public class MainActivity extends Activity {
         fill(heading,text("Расписание",16,INK,true)); heading.addView(icon(R.drawable.ic_settings,"Настройки",this::configure));column.addView(heading);gap(12);
         TextView date=text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),32,INK,true);date.setLetterSpacing(-0.035f);column.addView(date);
         column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU))+" · ИС-232",13,MUTED,false));gap(16);
-        dayNavigation();gap(8);
+        dayNavigation();dateStrip();gap(8);
         ScheduleRepository.Day day=ScheduleRepository.day(this,selected,settings);source(day);gap(12);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());
