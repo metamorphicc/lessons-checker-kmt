@@ -45,6 +45,8 @@ public class MainActivity extends Activity {
         ACCENT=getColor(R.color.accent); SURFACE=getColor(R.color.surface); TINT=getColor(R.color.tint);
         RULE=getColor(R.color.rule); ERROR=getColor(R.color.error); face=getResources().getFont(R.font.manrope);
         getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
+        if(Build.VERSION.SDK_INT>=33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+            android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(editing)show();else finish();});
         settings=new Settings(this);
         sourceExpanded=state!=null && state.getBoolean("sourceExpanded",false);
         selected=LocalDate.now(settings.zone());
@@ -249,52 +251,87 @@ public class MainActivity extends Activity {
         if (manager.isRequestPinAppWidgetSupported()) manager.requestPinAppWidget(new ComponentName(this,LessonsWidget.class),null,null);
         else new AlertDialog.Builder(this).setMessage("Зажми пустое место на главном экране → Виджеты → Пары · ИС-232. Выбери виджет и перетащи на экран.").setPositiveButton("Понятно",null).show();
     }
+    @Override public void onBackPressed() {
+        if(editing) show(); else super.onBackPressed();
+    }
+    void section(String label) {gap(20);column.addView(text(label,13,MUTED,true));gap(8);}
     void configure() {
         editing=true; frame();
-        column.addView(text("Настройки",30,INK,true));
+        LinearLayout heading=row();heading.addView(icon(R.drawable.ic_previous,"Назад к расписанию",this::show));
+        TextView title=text("Настройки",26,INK,true);title.setPadding(dp(12),0,0,0);fill(heading,title);column.addView(heading);
+        section("Главный экран");
+        column.addView(button("Добавить виджет 2 × 2",this::pinWidget));
         if(Build.VERSION.SDK_INT>=31) {
             boolean exact=getSystemService(AlarmManager.class).canScheduleExactAlarms();
-            column.addView(text(exact ? "Точные обновления разрешены" : "Обновление в момент звонка",18,INK,true));
-            column.addView(text("Чтобы виджет переключал текущую пару вовремя, разреши точные будильники. Без этого Android может задерживать обновления; кнопка ↻ работает всегда.",14,MUTED,false));
-            column.addView(button(exact ? "Настройки обновлений" : "Разрешить точные обновления",()->{
-                try { startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName()))); }
+            section("Обновление виджета");
+            LinearLayout updates=surface();updates.setPadding(dp(16),dp(12),dp(16),dp(12));
+            updates.addView(text(exact?"Точно по звонку":"В момент звонка",16,INK,true));
+            updates.addView(text(exact?"Разрешение на точные обновления включено.":"Разреши точные обновления, чтобы текущая пара переключалась вовремя.",13,MUTED,false));
+            updates.addView(button(exact?"Настроить разрешение":"Разрешить обновления",()->{
+                try {startActivity(new Intent(android.provider.Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,Uri.parse("package:"+getPackageName())));}
                 catch(ActivityNotFoundException e) {new AlertDialog.Builder(this).setMessage("Найди приложение «Пары · ИС-232» в настройках Android → Специальный доступ → Будильники и напоминания.").setPositiveButton("Понятно",null).show();}
-            })); gap(16);
+            }));column.addView(updates);
         }
-        Switch zone=new Switch(this); zone.setText("Часовой пояс телефона"); zone.setChecked(settings.deviceZone()); zone.setMinHeight(dp(48)); column.addView(zone);
-        zoneField=zone;
-        column.addView(text("По умолчанию: Новосибирск (UTC+7).",13,MUTED,false)); gap(16);
-        column.addView(text("Звонки",22,INK,true));
-        column.addView(text("Звонки уже заполнены по твоему скриншоту. Можно изменить все пять пар в формате 08:30 или очистить все поля, чтобы оставить только номера.",14,MUTED,false));
-        EditText[][] fields=new EditText[5][2];
-        bellFields=fields;
+        section("Часовой пояс");
+        LinearLayout timezone=surface();timezone.setPadding(dp(16),dp(12),dp(16),dp(12));
+        LinearLayout zoneRow=row();fill(zoneRow,text("Как на телефоне",15,INK,true));
+        Switch zone=new Switch(this);zone.setChecked(settings.deviceZone());zone.setMinHeight(dp(48));zone.setContentDescription("Часовой пояс телефона");
+        GradientDrawable thumb=background(SURFACE,24);thumb.setSize(dp(24),dp(24));thumb.setStroke(dp(1),RULE);zone.setThumbDrawable(thumb);
+        GradientDrawable track=background(RULE,24);track.setSize(dp(48),dp(28));zone.setTrackDrawable(track);
+        zone.setTrackTintList(new ColorStateList(new int[][]{new int[]{android.R.attr.state_checked},new int[]{}},new int[]{ACCENT,RULE}));
+        zone.setSwitchMinWidth(dp(52));zoneRow.addView(zone,new LinearLayout.LayoutParams(dp(56),dp(48)));timezone.addView(zoneRow);
+        timezone.addView(text("По умолчанию — Новосибирск, UTC+7.",12,MUTED,false));column.addView(timezone);zoneField=zone;
+        section("Расписание звонков");
+        LinearLayout bellsGroup=surface();bellsGroup.setPadding(dp(16),dp(12),dp(16),dp(12));
+        LinearLayout labels=row();labels.addView(text("Пара",11,MUTED,false),new LinearLayout.LayoutParams(dp(44),-2));
+        fill(labels,text("Начало",11,MUTED,false));fill(labels,text("Конец",11,MUTED,false));bellsGroup.addView(labels);
+        EditText[][] fields=new EditText[5][2];bellFields=fields;
         for(int i=0;i<5;i++) {
-            column.addView(text((i+1)+" пара",14,INK,true));
-            LinearLayout row=new LinearLayout(this);
+            LinearLayout times=row();times.setPadding(0,dp(6),0,dp(6));
+            times.addView(text(Integer.toString(i+1),16,INK,true),new LinearLayout.LayoutParams(dp(44),-2));
             for(int j=0;j<2;j++) {
-                EditText input=new EditText(this); input.setSingleLine(); input.setTextSize(18);
-                input.setText(settings.time(i+1,j==1)); input.setHint(j==0?"Начало":"Конец");
-                input.setContentDescription((i+1)+" пара, "+(j==0?"начало":"конец")); input.setInputType(InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_TIME);
-                fields[i][j]=input; row.addView(input,new LinearLayout.LayoutParams(0,dp(56),1));
-            } column.addView(row);
+                EditText input=new EditText(this);input.setSingleLine();input.setTextSize(17);input.setTypeface(face);input.setFontVariationSettings("'wght' 450");
+                input.setFontFeatureSettings("tnum");input.setTextColor(INK);input.setHintTextColor(MUTED);
+                input.setText(settings.time(i+1,j==1));input.setHint(j==0?"08:30":"10:00");input.setSelectAllOnFocus(true);
+                input.setPadding(dp(8),dp(8),dp(8),dp(8));input.setGravity(Gravity.CENTER);input.setMinimumWidth(0);
+                StateListDrawable states=new StateListDrawable();
+                GradientDrawable normal=background(PAPER,10);normal.setStroke(dp(1),RULE);
+                GradientDrawable focused=background(PAPER,10);focused.setStroke(dp(1),ACCENT);
+                states.addState(new int[]{android.R.attr.state_focused},focused);states.addState(new int[]{},normal);input.setBackground(states);
+                input.setContentDescription((i+1)+" пара, "+(j==0?"начало":"конец"));
+                input.setInputType(InputType.TYPE_CLASS_DATETIME|InputType.TYPE_DATETIME_VARIATION_TIME);
+                input.setImeOptions(i==4 && j==1?android.view.inputmethod.EditorInfo.IME_ACTION_DONE:android.view.inputmethod.EditorInfo.IME_ACTION_NEXT);
+                fields[i][j]=input;LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(52),1);
+                if(j==0)lp.setMarginEnd(dp(8));times.addView(input,lp);
+            }
+            bellsGroup.addView(times);
         }
-        TextView error=text("",14,Color.rgb(156,40,40),false); error.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE); column.addView(error);
-        column.addView(button("Сохранить",()->{
-            List<ScheduleEngine.Bell> bells=new ArrayList<>(); boolean any=false;
-            for(EditText[] pair:fields) for(EditText input:pair) if(!input.getText().toString().trim().isEmpty()) any=true;
+        column.addView(bellsGroup);gap(8);
+        column.addView(text("Формат ЧЧ:ММ. Чтобы видеть только номера пар, очисти все поля.",12,MUTED,false));
+        TextView error=text("",13,ERROR,false);error.setMinHeight(dp(44));
+        error.setAccessibilityLiveRegion(View.ACCESSIBILITY_LIVE_REGION_POLITE);column.addView(error);
+        Button save=button("Сохранить",()->{
+            List<ScheduleEngine.Bell> bells=new ArrayList<>();boolean any=false;
+            for(EditText[] pair:fields)for(EditText input:pair)if(!input.getText().toString().trim().isEmpty())any=true;
             if(any) {
                 try {
                     for(EditText[] pair:fields) {
                         String start=pair[0].getText().toString().trim(),end=pair[1].getText().toString().trim();
-                        if(!start.matches("([01]\\d|2[0-3]):[0-5]\\d") || !end.matches("([01]\\d|2[0-3]):[0-5]\\d")) throw new IllegalArgumentException();
+                        if(!start.matches("([01]\\d|2[0-3]):[0-5]\\d") || !end.matches("([01]\\d|2[0-3]):[0-5]\\d"))throw new IllegalArgumentException();
                         bells.add(new ScheduleEngine.Bell(LocalTime.parse(start),LocalTime.parse(end)));
                     }
-                    if(!ScheduleEngine.validBells(bells)) throw new IllegalArgumentException();
-                } catch(RuntimeException e) {error.setText("Проверь все 5 пар: ЧЧ:ММ, начало раньше конца, пары не пересекаются."); return;}
+                    if(!ScheduleEngine.validBells(bells))throw new IllegalArgumentException();
+                }catch(RuntimeException e) {
+                    error.setText("Проверь все 5 пар: ЧЧ:ММ, начало раньше конца, пары не пересекаются.");
+                    error.requestRectangleOnScreen(new android.graphics.Rect(0,0,error.getWidth(),error.getHeight()),false);return;
+                }
             }
-            settings.save(null,zone.isChecked(),bells);
-            LessonsWidget.updateAll(this); selected=LocalDate.now(settings.zone()); followToday=true; show();
-        }));
-        column.addView(button("Отмена",this::show));
+            settings.save(null,zone.isChecked(),bells);LessonsWidget.updateAll(this);
+            android.view.inputmethod.InputMethodManager keyboard=getSystemService(android.view.inputmethod.InputMethodManager.class);
+            keyboard.hideSoftInputFromWindow(screen.getWindowToken(),0);
+            selected=LocalDate.now(settings.zone());followToday=true;show();
+        });
+        save.setBackground(controlBackground(ACCENT,14));save.setTextColor(SURFACE);column.addView(save);gap(8);
+        Button cancel=button("Отмена",this::show);cancel.setBackground(controlBackground(PAPER,14));column.addView(cancel);
     }
 }
