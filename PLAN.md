@@ -68,3 +68,8 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 10.1. Replace week paging and the seven-date strip with adjacent-day arrows.
 - [x] 10.2. Make Today non-interactive on today's date; offer a return action on other dates.
 - [x] 10.3. Verify native navigation and narrow layouts; release version 1.4.2.
+
+## 11. Date strip restoration
+
+- [x] 11.1. Restore the selectable seven-day strip while retaining one-day arrows.
+- [x] 11.2. Verify selection, week rollover and narrow layouts; release version 1.4.3.

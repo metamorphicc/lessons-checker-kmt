@@ -66,7 +66,7 @@ Version 1.3 fixes the launcher span, compact text clipping, automatic scroll res
 
 ## Interface
 
-The light native agenda has daily date navigation, a current
+The light native agenda has daily date navigation with a selectable date strip, a current
 or next class summary, and grouped rows with a dedicated time column. Settings
 and the 2 × 2 widget share the same colors and bundled Manrope typeface. The
 source label stays visible; tap it for freshness and fallback details. Use the
@@ -87,3 +87,7 @@ See [widget geometry checks](docs/widget-geometry-2026-11-05.md).
 Version 1.4.2 removes the week strip and week jumps. Date arrows now move by one
 calendar day, including weekends and month/year boundaries. Browsing an unpublished
 date still uses the explicitly labeled PDF fallback.
+
+Version 1.4.3 restores the seven-day strip with weekday initials and date numbers.
+Tap a date to select it; the highlight follows the selected day. Arrows still move
+by one day, and **На сегодня** is offered only when browsing another date.

@@ -48,3 +48,11 @@ Native UI checks verify one-day steps in both directions across a week, month
 and year boundary; return to today; and the passive Today label. Layouts passed
 at 320/375/414/768 dp, including the return control at font scale 1.3. Release lint,
 build and APK signature verification passed. See [navigation evidence](docs/day-navigation-2026-11-05.md).
+
+## Version 1.4.3 date strip
+
+The restored strip selects exact dates and keeps the chosen cell visible. Native
+checks passed for Sunday selection, next-day rollover to Monday, a single selected
+cell, daily arrows and return to today. Layouts at 320/375/414/768 dp and font scale
+1.3 passed, as did release build, lint and APK signature verification. See
+[date strip evidence](docs/date-strip-2026-11-05.md).

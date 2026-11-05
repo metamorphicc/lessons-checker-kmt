@@ -1,0 +1,22 @@
+{
+  "layout-320": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "layout-375": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "layout-414": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "layout-768": {
+    "mode": "screen",
+    "layoutIssues": []
+  },
+  "layout-tomorrow-font13": {
+    "mode": "screen",
+    "layoutIssues": []
+  }
+}
