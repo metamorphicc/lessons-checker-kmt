@@ -1,0 +1,71 @@
+{
+  "mode": "widget",
+  "cardWidthDp": 245,
+  "cardHeightDp": 122,
+  "paddingDp": 12,
+  "widthDp": 245,
+  "heightDp": 122,
+  "fontScale": 1,
+  "items": [
+    {
+      "text": "Сайт · 3 пара",
+      "leftDp": 0,
+      "width": 221,
+      "height": 13.5,
+      "textSize": 10,
+      "ellipsis": 0,
+      "layoutHeight": 13.5,
+      "available": 13.5
+    },
+    {
+      "text": "↻",
+      "leftDp": 0,
+      "width": 0,
+      "height": 0,
+      "textSize": 22,
+      "ellipsis": 0,
+      "layoutHeight": 0,
+      "available": 0
+    },
+    {
+      "text": "Бородина Е.Н.",
+      "leftDp": 12,
+      "width": 221,
+      "height": 31.5,
+      "textSize": 17,
+      "ellipsis": 0,
+      "layoutHeight": 23,
+      "available": 31.5
+    },
+    {
+      "text": "12:20–13:50",
+      "leftDp": 12,
+      "width": 221,
+      "height": 15,
+      "textSize": 11,
+      "ellipsis": 0,
+      "layoutHeight": 15,
+      "available": 15
+    },
+    {
+      "text": "106 К1",
+      "leftDp": 12,
+      "width": 221,
+      "height": 22,
+      "textSize": 16,
+      "ellipsis": 0,
+      "layoutHeight": 22,
+      "available": 22
+    },
+    {
+      "text": "Сайт 5.11 08:47",
+      "leftDp": 0,
+      "width": 0,
+      "height": 0,
+      "textSize": 10,
+      "ellipsis": 0,
+      "layoutHeight": 0,
+      "available": 0
+    }
+  ]
+}

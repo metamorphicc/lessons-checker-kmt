@@ -29,7 +29,7 @@ The default time zone is Novosibirsk (UTC+7). For another time zone, enable **К
 
 - The app checks on opening (with a 15-minute freshness interval) and requests background sync every 15 minutes while a network is available. Android can delay background jobs, especially in battery-saving modes.
 - Tap the refresh icon beside the source label in the app or **↻** on an expanded widget to request a new fetch. Compact widgets prioritize class, time, and classroom; their header shows the source. Repeated requests are briefly throttled.
-- Compact class details use **До HH:MM** for a current class and **С HH:MM** for the next one. Classroom numbers are displayed without the extra label so they remain readable in small cells.
+- The widget shows the full class interval, such as **08:30–10:00**, for both current and next classes. Classroom numbers are displayed without the extra label in compact cards.
 - **Сайт** means an exact-date website schedule was fetched recently. **Кэш** means the app is using an older successful fetch or the latest refresh failed. Tap the source label to see the fetch timestamp and details. The timestamp is the fetch time, not the college's edit time; the endpoint does not provide an edit timestamp.
 - **База** means the displayed day comes from the PDF. The app distinguishes an unpublished date, a first run, and a failed refresh. A published day with all five classes cancelled stays empty and is never filled from the PDF.
 - Remote classes marked **ДО** are excluded from on-campus classes. Saturday's baseline remains remote as requested. A dated website row can override it if the college publishes actual on-campus classes.
@@ -75,3 +75,10 @@ arrow buttons to move between weeks, or **Сегодня** to return to today.
 The data loading, exact-date matching, cache and baseline fallback are unchanged.
 [DESIGN.md](DESIGN.md) records the native design system. Manrope's SIL Open Font
 License is included in [docs/licenses/Manrope-OFL.txt](docs/licenses/Manrope-OFL.txt).
+
+Version 1.4.1 fixes the compact widget geometry. On Android 12+, a narrow card's
+visible height is capped to its width using the launcher's exact size list, so a
+131 × 244 dp host shows a 131 × 131 dp card. The launcher still reserves its
+2 × 2 grid cells; the unused host area stays transparent. Text shares equal
+horizontal and vertical padding. Older Android versions use content-sized cards.
+See [widget geometry checks](docs/widget-geometry-2026-11-05.md).

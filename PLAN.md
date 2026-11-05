@@ -56,3 +56,9 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 8.2. Restyle settings and the 2 × 2 widget without changing schedule retrieval.
 - [x] 8.3. Handle modern and legacy back navigation and missing bell times.
 - [x] 8.4. Verify native layouts, settings flows and release version 1.4.
+
+## 9. Widget geometry correction
+
+- [x] 9.1. Inspect real launcher dimensions and cap the compact card's aspect ratio.
+- [x] 9.2. Align content insets and show the full start/end time interval.
+- [x] 9.3. Measure actual provider RemoteViews at normal and large fonts; release 1.4.1.

@@ -33,3 +33,11 @@ font scale 1.3, minimum-size widget text, settings validation, system back and w
 navigation were verified. Scroll retention, draft restoration and refresh loading
 checks passed. All 61 existing schedule checks, release lint and APK signature
 verification passed. See [redesign evidence](docs/ui-redesign-2026-11-05.md).
+
+## Version 1.4.1 widget correction
+
+The prior 90 dp XML-only fixture missed the launcher's tall 131 × 244 dp host.
+The revised native probe invokes the production provider renderer and asserts
+card dimensions, vertical text fit and a complete time interval. Verified at
+131 × 244 dp with font scales 1.0/1.3, 90 × 90 dp at 1.3, and 245 × 122/244 dp.
+The real launcher card was also inspected. See [geometry evidence](docs/widget-geometry-2026-11-05.md).

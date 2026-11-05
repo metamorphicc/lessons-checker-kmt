@@ -36,7 +36,9 @@ Preserve drafts and scroll position across Activity recreation.
 ## Widget
 
 Keep the 2 x 2 launcher footprint and existing resizing behavior. Share the app's
-colors and type hierarchy. Prioritize class status, title, time and room. Preserve
+colors and type hierarchy. Prioritize class number, title, full time interval and room. Narrow cards must
+not stretch vertically to fill unusually tall launcher cells. Use equal 12 dp
+insets (4 dp only for the 90 dp minimum size). Preserve
 source labels and the expanded refresh control.
 
 ## Boundaries
