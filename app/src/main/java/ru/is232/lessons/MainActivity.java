@@ -22,6 +22,7 @@ public class MainActivity extends Activity {
     private int PAPER, INK, MUTED, ACCENT, SURFACE, TINT, RULE, ERROR;
     private Typeface face;
     private boolean sourceExpanded;
+    private android.window.OnBackInvokedCallback settingsBack;
     static final Locale RU=Locale.forLanguageTag("ru");
     private Settings settings;
     private LocalDate selected;
@@ -44,9 +45,9 @@ public class MainActivity extends Activity {
         PAPER=getColor(R.color.paper); INK=getColor(R.color.ink); MUTED=getColor(R.color.muted);
         ACCENT=getColor(R.color.accent); SURFACE=getColor(R.color.surface); TINT=getColor(R.color.tint);
         RULE=getColor(R.color.rule); ERROR=getColor(R.color.error); face=getResources().getFont(R.font.manrope);
-        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
-        if(Build.VERSION.SDK_INT>=33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
-            android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,()->{if(editing)show();else finish();});
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|
+            (Build.VERSION.SDK_INT>=27?View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR:0));
+        if(Build.VERSION.SDK_INT>=33) settingsBack=this::show;
         settings=new Settings(this);
         sourceExpanded=state!=null && state.getBoolean("sourceExpanded",false);
         selected=LocalDate.now(settings.zone());
@@ -182,6 +183,7 @@ public class MainActivity extends Activity {
     }
     void show() {
         int previousScroll=!editing && selected.equals(renderedDate) && screen!=null ? pendingScroll!=null?pendingScroll:screen.getScrollY() : 0;
+        if(editing && Build.VERSION.SDK_INT>=33) getOnBackInvokedDispatcher().unregisterOnBackInvokedCallback(settingsBack);
         editing=false; frame();
         LinearLayout heading=row();
         fill(heading,text("Расписание",16,INK,true)); heading.addView(icon(R.drawable.ic_settings,"Настройки",this::configure));column.addView(heading);gap(12);
@@ -202,8 +204,8 @@ public class MainActivity extends Activity {
                 summary.addView(text(ambiguous?"Зависит от чётности недели":active.shortTitle(),24,INK,true));
                 summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),13,MUTED,false));
             } else {
-                summary.addView(text(distance?"Сегодня в ДО":lessons.isEmpty()?"Очных пар нет":"Пары закончились",24,INK,true));
-                summary.addView(text(distance?"В колледж ехать не нужно.":lessons.isEmpty()?("base".equals(day.source())?"По базовому расписанию. Замены не подтверждены.":"По опубликованному расписанию."):"Расписание дня — ниже.",13,MUTED,false));
+                summary.addView(text(distance?"Сегодня в ДО":lessons.isEmpty()?"Очных пар нет":settings.bells().isEmpty()?"Время не задано":"Пары закончились",24,INK,true));
+                summary.addView(text(distance?"В колледж ехать не нужно.":lessons.isEmpty()?("base".equals(day.source())?"По базовому расписанию. Замены не подтверждены.":"По опубликованному расписанию."):settings.bells().isEmpty()?"Добавь звонки в настройках.":"Расписание дня — ниже.",13,MUTED,false));
             }
             column.addView(summary);gap(24);
         }
@@ -251,11 +253,15 @@ public class MainActivity extends Activity {
         if (manager.isRequestPinAppWidgetSupported()) manager.requestPinAppWidget(new ComponentName(this,LessonsWidget.class),null,null);
         else new AlertDialog.Builder(this).setMessage("Зажми пустое место на главном экране → Виджеты → Пары · ИС-232. Выбери виджет и перетащи на экран.").setPositiveButton("Понятно",null).show();
     }
+    // API 33+ uses the platform callback; this override supports Android 8–12.
+    @android.annotation.SuppressLint("GestureBackNavigation")
     @Override public void onBackPressed() {
-        if(editing) show(); else super.onBackPressed();
+        if(Build.VERSION.SDK_INT<33 && editing) show(); else super.onBackPressed();
     }
     void section(String label) {gap(20);column.addView(text(label,13,MUTED,true));gap(8);}
     void configure() {
+        if(!editing && Build.VERSION.SDK_INT>=33) getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
+            android.window.OnBackInvokedDispatcher.PRIORITY_DEFAULT,settingsBack);
         editing=true; frame();
         LinearLayout heading=row();heading.addView(icon(R.drawable.ic_previous,"Назад к расписанию",this::show));
         TextView title=text("Настройки",26,INK,true);title.setPadding(dp(12),0,0,0);fill(heading,title);column.addView(heading);
