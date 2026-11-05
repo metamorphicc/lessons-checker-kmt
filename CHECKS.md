@@ -41,3 +41,10 @@ The revised native probe invokes the production provider renderer and asserts
 card dimensions, vertical text fit and a complete time interval. Verified at
 131 × 244 dp with font scales 1.0/1.3, 90 × 90 dp at 1.3, and 245 × 122/244 dp.
 The real launcher card was also inspected. See [geometry evidence](docs/widget-geometry-2026-11-05.md).
+
+## Version 1.4.2 daily navigation
+
+Native UI checks verify one-day steps in both directions across a week, month
+and year boundary; return to today; and the passive Today label. Layouts passed
+at 320/375/414/768 dp, including the return control at font scale 1.3. Release lint,
+build and APK signature verification passed. See [navigation evidence](docs/day-navigation-2026-11-05.md).

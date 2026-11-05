@@ -66,11 +66,12 @@ Version 1.3 fixes the launcher span, compact text clipping, automatic scroll res
 
 ## Interface
 
-Version 1.4 introduces a light native agenda with a weekly date picker, a current
+The light native agenda has daily date navigation, a current
 or next class summary, and grouped rows with a dedicated time column. Settings
 and the 2 × 2 widget share the same colors and bundled Manrope typeface. The
 source label stays visible; tap it for freshness and fallback details. Use the
-arrow buttons to move between weeks, or **Сегодня** to return to today.
+arrow buttons to move one day backward or forward. On other dates, **На сегодня**
+returns to today; the center label on today itself is not a button.
 
 The data loading, exact-date matching, cache and baseline fallback are unchanged.
 [DESIGN.md](DESIGN.md) records the native design system. Manrope's SIL Open Font
@@ -82,3 +83,7 @@ visible height is capped to its width using the launcher's exact size list, so a
 2 × 2 grid cells; the unused host area stays transparent. Text shares equal
 horizontal and vertical padding. Older Android versions use content-sized cards.
 See [widget geometry checks](docs/widget-geometry-2026-11-05.md).
+
+Version 1.4.2 removes the week strip and week jumps. Date arrows now move by one
+calendar day, including weekends and month/year boundaries. Browsing an unpublished
+date still uses the explicitly labeled PDF fallback.

@@ -1,0 +1,10 @@
+{
+  "mode": "dailyNavigation",
+  "layoutIssues": [],
+  "initial": "2026-11-30",
+  "forward": "2026-12-01",
+  "backward": "2026-11-29",
+  "returnDate": "2026-11-05",
+  "returnActionHiddenOnToday": true,
+  "todayLabelIsPassive": true
+}

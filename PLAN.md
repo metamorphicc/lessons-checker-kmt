@@ -62,3 +62,9 @@ Each completed substep gets a separate commit with a short English message.
 - [x] 9.1. Inspect real launcher dimensions and cap the compact card's aspect ratio.
 - [x] 9.2. Align content insets and show the full start/end time interval.
 - [x] 9.3. Measure actual provider RemoteViews at normal and large fonts; release 1.4.1.
+
+## 10. Daily navigation UX
+
+- [x] 10.1. Replace week paging and the seven-date strip with adjacent-day arrows.
+- [x] 10.2. Make Today non-interactive on today's date; offer a return action on other dates.
+- [x] 10.3. Verify native navigation and narrow layouts; release version 1.4.2.
