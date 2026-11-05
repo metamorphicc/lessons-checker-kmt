@@ -140,8 +140,8 @@ public class MainActivity extends Activity {
     }
     void calendar() {
         LinearLayout nav=row();
-        TextView month=text(selected.format(DateTimeFormatter.ofPattern("LLLL yyyy",RU)),14,MUTED,true);
-        fill(nav,month);
+        TextView year=text(Integer.toString(selected.getYear()),14,MUTED,true);
+        fill(nav,year);
         Button today=button("Сегодня",()->selectDate(LocalDate.now(settings.zone()))); today.setBackground(controlBackground(PAPER,12)); nav.addView(today);
         nav.addView(icon(R.drawable.ic_previous,"Предыдущая неделя",()->selectDate(selected.minusWeeks(1))));
         nav.addView(icon(R.drawable.ic_next,"Следующая неделя",()->selectDate(selected.plusWeeks(1)))); column.addView(nav);
@@ -165,7 +165,7 @@ public class MainActivity extends Activity {
     }
     void source(ScheduleRepository.Day day) {
         boolean base="base".equals(day.source()), cache="cache".equals(day.source());
-        String label=base ? "База · замены не подтверждены" : cache ? "Кэш · сохранённое расписание" : "Сайт КМТ · актуальное расписание";
+        String label=base ? "База · замены не подтверждены" : cache ? "Кэш · сохранённое расписание" : "Сайт КМТ · обновлено";
         if(day.failed()) label=base?"База · сайт недоступен":"Кэш · сайт недоступен";
         LinearLayout line=row();
         Button details=button(label,()->{sourceExpanded=!sourceExpanded;show();});

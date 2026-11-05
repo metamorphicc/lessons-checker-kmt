@@ -1,6 +1,6 @@
 <resources>
     <style name="AppThemeBase" parent="android:style/Theme.Material.Light.NoActionBar">
-        <item name="android:fontFamily">@font/manrope</item>
+        <item name="android:fontFamily">@font/manrope_family</item>
         <item name="android:colorAccent">@color/accent</item>
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowActionModeOverlay">true</item>
