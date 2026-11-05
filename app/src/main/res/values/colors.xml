@@ -1,0 +1,11 @@
+<resources>
+    <color name="paper">#F2F3F7</color>
+    <color name="surface">#FFFFFF</color>
+    <color name="ink">#191B24</color>
+    <color name="muted">#646978</color>
+    <color name="accent">#3159CC</color>
+    <color name="tint">#EAF0FF</color>
+    <color name="rule">#E4E6EE</color>
+    <color name="pressed">#DFE5F5</color>
+    <color name="error">#B32636</color>
+</resources>

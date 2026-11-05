@@ -6,6 +6,9 @@ import android.content.*;
 import android.graphics.Typeface;
 import android.graphics.Color;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.graphics.drawable.StateListDrawable;
+import android.content.res.ColorStateList;
 import android.os.*;
 import android.net.Uri;
 import android.text.InputType;
@@ -16,8 +19,9 @@ import java.time.format.*;
 import java.util.*;
 
 public class MainActivity extends Activity {
-    static final int PAPER=Color.rgb(245,244,239), INK=Color.rgb(30,44,35), MUTED=Color.rgb(87,99,91),
-            ACCENT=Color.rgb(53,92,67), SURFACE=Color.WHITE, TINT=Color.rgb(228,236,223);
+    private int PAPER, INK, MUTED, ACCENT, SURFACE, TINT, RULE, ERROR;
+    private Typeface face;
+    private boolean sourceExpanded;
     static final Locale RU=Locale.forLanguageTag("ru");
     private Settings settings;
     private LocalDate selected;
@@ -37,7 +41,12 @@ public class MainActivity extends Activity {
 
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        PAPER=getColor(R.color.paper); INK=getColor(R.color.ink); MUTED=getColor(R.color.muted);
+        ACCENT=getColor(R.color.accent); SURFACE=getColor(R.color.surface); TINT=getColor(R.color.tint);
+        RULE=getColor(R.color.rule); ERROR=getColor(R.color.error); face=getResources().getFont(R.font.manrope);
+        getWindow().getDecorView().setSystemUiVisibility(View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR|View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR);
         settings=new Settings(this);
+        sourceExpanded=state!=null && state.getBoolean("sourceExpanded",false);
         selected=LocalDate.now(settings.zone());
         if (state!=null) { selected=LocalDate.parse(state.getString("date",selected.toString())); followToday=state.getBoolean("follow",true); }
         if(state!=null && state.getBoolean("editing",false)) {
@@ -62,6 +71,7 @@ public class MainActivity extends Activity {
     }
     @Override protected void onSaveInstanceState(Bundle state) {
         state.putString("date",selected.toString()); state.putBoolean("follow",followToday); super.onSaveInstanceState(state);
+        state.putBoolean("sourceExpanded",sourceExpanded);
         state.putBoolean("editing",editing); state.putInt("scroll",screen==null?0:screen.getScrollY());
         if(editing && bellFields!=null) {
             String[] draft=new String[10];for(int i=0;i<5;i++) for(int j=0;j<2;j++) draft[i*2+j]=bellFields[i][j].getText().toString();
@@ -75,72 +85,153 @@ public class MainActivity extends Activity {
     }
     TextView text(String value, int size, int color, boolean bold) {
         TextView t=new TextView(this); t.setText(value); t.setTextSize(size); t.setTextColor(color);
-        t.setFontFeatureSettings("tnum"); if (bold) t.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
-        t.setPadding(0,dp(4),0,dp(4)); return t;
+        t.setTypeface(face); t.setFontVariationSettings(bold ? "'wght' 650" : "'wght' 450");
+        t.setFontFeatureSettings("tnum"); t.setIncludeFontPadding(false);
+        t.setLineSpacing(dp(3),1); t.setPadding(0,dp(4),0,dp(4)); return t;
     }
     void gap(int height) { Space s=new Space(this); column.addView(s,new LinearLayout.LayoutParams(1,dp(height))); }
+    android.graphics.drawable.Drawable controlBackground(int color, int radius) {
+        StateListDrawable states=new StateListDrawable();
+        GradientDrawable focus=background(color,radius); focus.setStroke(dp(2),ACCENT);
+        states.addState(new int[]{android.R.attr.state_focused},focus);
+        states.addState(new int[]{},background(color,radius));
+        return new RippleDrawable(ColorStateList.valueOf(getColor(R.color.pressed)),states,background(SURFACE,radius));
+    }
     Button button(String label, Runnable action) {
-        Button b=new Button(this); b.setText(label); b.setAllCaps(false); b.setTextColor(ACCENT); b.setMinHeight(dp(48));
-        b.setOnClickListener(v->action.run()); return b;
+        Button b=new Button(this); b.setText(label); b.setAllCaps(false); b.setTextSize(14);
+        b.setTypeface(face); b.setFontVariationSettings("'wght' 650"); b.setTextColor(new ColorStateList(
+            new int[][]{new int[]{-android.R.attr.state_enabled},new int[]{}},new int[]{MUTED,ACCENT}));
+        b.setMinHeight(dp(48)); b.setMinimumWidth(0); b.setMinWidth(0); b.setSingleLine(true);
+        b.setPadding(dp(16),dp(8),dp(16),dp(8)); b.setStateListAnimator(null); b.setElevation(0);
+        b.setBackground(controlBackground(SURFACE,12)); b.setOnClickListener(v->action.run()); return b;
+    }
+    ImageButton icon(int resource, String label, Runnable action) {
+        ImageButton b=new ImageButton(this); b.setImageResource(resource); b.setContentDescription(label);
+        b.setPadding(dp(13),dp(13),dp(13),dp(13)); b.setBackground(controlBackground(SURFACE,24));
+        b.setOnClickListener(v->action.run()); b.setLayoutParams(new LinearLayout.LayoutParams(dp(48),dp(48))); return b;
+    }
+    LinearLayout row() { LinearLayout r=new LinearLayout(this); r.setGravity(Gravity.CENTER_VERTICAL); return r; }
+    void fill(LinearLayout parent,View child) {parent.addView(child,new LinearLayout.LayoutParams(0,-2,1));}
+    void separator(LinearLayout parent,int inset) {
+        View line=new View(this); line.setBackgroundColor(RULE);
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(1)); lp.setMargins(dp(inset),0,dp(16),0);parent.addView(line,lp);
+    }
+    LinearLayout surface() {
+        LinearLayout v=vertical(); v.setBackground(background(SURFACE,20));return v;
     }
     void frame() {
         ScrollView scroll=new ScrollView(this); scroll.setFillViewport(true); scroll.setBackgroundColor(PAPER);
-        screen=scroll;
-        column=vertical(); column.setPadding(dp(22),dp(18),dp(22),dp(28)); scroll.addView(column);
+        scroll.setVerticalScrollBarEnabled(false); screen=scroll;
+        FrameLayout container=new FrameLayout(this);
+        column=vertical(); column.setPadding(dp(20),dp(12),dp(20),dp(32));
+        FrameLayout.LayoutParams content=new FrameLayout.LayoutParams(
+            Math.min(getResources().getDisplayMetrics().widthPixels,dp(600)),-2,Gravity.TOP|Gravity.CENTER_HORIZONTAL);
+        container.addView(column,content); scroll.addView(container);
         scroll.setOnApplyWindowInsetsListener((v,insets)->{
             v.setPadding(insets.getSystemWindowInsetLeft(),insets.getSystemWindowInsetTop(),insets.getSystemWindowInsetRight(),insets.getSystemWindowInsetBottom());
             return insets.consumeSystemWindowInsets();
         }); setContentView(scroll); scroll.requestApplyInsets();
     }
+    void selectDate(LocalDate date) {
+        selected=date; followToday=date.equals(LocalDate.now(settings.zone())); sourceExpanded=false; show();
+    }
+    void calendar() {
+        LinearLayout nav=row();
+        TextView month=text(selected.format(DateTimeFormatter.ofPattern("LLLL yyyy",RU)),14,MUTED,true);
+        fill(nav,month);
+        Button today=button("Сегодня",()->selectDate(LocalDate.now(settings.zone()))); today.setBackground(controlBackground(PAPER,12)); nav.addView(today);
+        nav.addView(icon(R.drawable.ic_previous,"Предыдущая неделя",()->selectDate(selected.minusWeeks(1))));
+        nav.addView(icon(R.drawable.ic_next,"Следующая неделя",()->selectDate(selected.plusWeeks(1)))); column.addView(nav);
+        HorizontalScrollView week=new HorizontalScrollView(this); week.setHorizontalScrollBarEnabled(false);
+        LinearLayout dates=row(); LocalDate monday=ScheduleEngine.monday(selected);
+        int width=Math.max(48,(Math.min(getResources().getConfiguration().screenWidthDp,600)-40)/7);
+        String[] labels={"ПН","ВТ","СР","ЧТ","ПТ","СБ","ВС"};
+        for(int i=0;i<7;i++) {
+            LocalDate date=monday.plusDays(i); boolean chosen=date.equals(selected);
+            LinearLayout cell=vertical(); cell.setGravity(Gravity.CENTER); cell.setPadding(dp(2),dp(8),dp(2),dp(8));
+            cell.setBackground(controlBackground(chosen?INK:PAPER,16));
+            TextView label=text(labels[i],10,chosen?SURFACE:MUTED,true); label.setGravity(Gravity.CENTER);
+            TextView number=text(Integer.toString(date.getDayOfMonth()),19,chosen?SURFACE:date.equals(LocalDate.now(settings.zone()))?ACCENT:INK,true);number.setGravity(Gravity.CENTER);
+            cell.addView(label); cell.addView(number); cell.setMinimumHeight(dp(72)); cell.setFocusable(true);cell.setClickable(true);
+            cell.setContentDescription(date.format(DateTimeFormatter.ofPattern("EEEE, d MMMM",RU))+(chosen?", выбрано":""));
+            cell.setSelected(chosen); cell.setOnClickListener(v->selectDate(date));
+            dates.addView(cell,new LinearLayout.LayoutParams(dp(width),-2));
+        }
+        week.addView(dates);column.addView(week);
+        week.post(()->week.smoothScrollTo(dp(width)*Math.max(0,selected.getDayOfWeek().getValue()-4),0));
+    }
+    void source(ScheduleRepository.Day day) {
+        boolean base="base".equals(day.source()), cache="cache".equals(day.source());
+        String label=base ? "База · замены не подтверждены" : cache ? "Кэш · сохранённое расписание" : "Сайт КМТ · актуальное расписание";
+        if(day.failed()) label=base?"База · сайт недоступен":"Кэш · сайт недоступен";
+        LinearLayout line=row();
+        Button details=button(label,()->{sourceExpanded=!sourceExpanded;show();});
+        details.setTextSize(11);details.setPadding(0,0,0,0);details.setGravity(Gravity.START|Gravity.CENTER_VERTICAL);
+        details.setTextColor(MUTED);details.setBackground(controlBackground(PAPER,12));
+        details.setContentDescription(label+". "+(sourceExpanded?"Скрыть подробности":"Показать подробности"));
+        fill(line,details);
+        ImageButton refresh=icon(R.drawable.ic_refresh,"Обновить с сайта",()->refreshLive(true));
+        boolean loading=ScheduleRepository.isRefreshing();refresh.setEnabled(!loading);refresh.setAlpha(loading?0.4f:1f);
+        if(loading) refresh.setContentDescription("Проверяем сайт…");line.addView(refresh);column.addView(line);
+        if(sourceExpanded) {
+            column.addView(text(day.badge(settings.zone()),12,MUTED,false));
+            column.addView(text(base?"Расписание из PDF. Замены на эту дату не подтверждены.":"Сайт указывает преподавателей и аудитории, без названий предметов.",12,MUTED,false));gap(8);
+        }
+    }
     void show() {
         int previousScroll=!editing && selected.equals(renderedDate) && screen!=null ? pendingScroll!=null?pendingScroll:screen.getScrollY() : 0;
         editing=false; frame();
-        LinearLayout heading=new LinearLayout(this); heading.setGravity(Gravity.CENTER_VERTICAL);
-        TextView title=text("Пары / ИС-232",20,INK,true);
-        heading.addView(title,new LinearLayout.LayoutParams(0,-2,1));
-        heading.addView(button("Настройки",this::configure)); column.addView(heading); gap(20);
-        column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU)),16,MUTED,false));
-        column.addView(text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),36,INK,true));
-        column.addView(text("ИС-232 · Очные пары",14,MUTED,false));
-        LinearLayout nav=new LinearLayout(this);
-        Button prev=button("←",()->{selected=selected.minusDays(1);followToday=false;show();}); prev.setContentDescription("Предыдущий день");
-        Button today=button("Сегодня",()->{selected=LocalDate.now(settings.zone());followToday=true;show();});
-        Button next=button("→",()->{selected=selected.plusDays(1);followToday=false;show();}); next.setContentDescription("Следующий день");
-        for (Button b : new Button[]{prev,today,next}) nav.addView(b,new LinearLayout.LayoutParams(0,-2,1));
-        column.addView(nav); gap(16);
-        ScheduleRepository.Day day=ScheduleRepository.day(this,selected,settings);
-        column.addView(text(day.badge(settings.zone()),13,MUTED,false));
-        if("base".equals(day.source())) column.addView(text("Замены не подтверждены. Это расписание из PDF.",13,MUTED,false));
-        else column.addView(text("Сайт указывает преподавателей и аудитории. Названия предметов не передаются.",13,MUTED,false));
-        Button refresh=button(ScheduleRepository.isRefreshing() ? "Проверяем сайт…" : "Обновить с сайта",()->refreshLive(true));
-        refresh.setEnabled(!ScheduleRepository.isRefreshing());column.addView(refresh);
+        LinearLayout heading=row();
+        fill(heading,text("Расписание",16,INK,true)); heading.addView(icon(R.drawable.ic_settings,"Настройки",this::configure));column.addView(heading);gap(12);
+        TextView date=text(selected.format(DateTimeFormatter.ofPattern("d MMMM",RU)),32,INK,true);date.setLetterSpacing(-0.035f);column.addView(date);
+        column.addView(text(selected.format(DateTimeFormatter.ofPattern("EEEE",RU))+" · ИС-232",13,MUTED,false));gap(16);
+        calendar();gap(8);
+        ScheduleRepository.Day day=ScheduleRepository.day(this,selected,settings);source(day);gap(12);
         List<ScheduleEngine.Lesson> lessons=day.lessons();
         ScheduleEngine.Moment moment=ScheduleEngine.moment(lessons,LocalTime.now(settings.zone()),settings.bells());
-        boolean isToday=selected.equals(LocalDate.now(settings.zone()));
-        LinearLayout summary=vertical(); summary.setPadding(dp(18),dp(14),dp(18),dp(14)); summary.setBackground(background(ACCENT,20));
-        boolean distance=day.remoteOnly();
-        String headline=distance ? "Очных пар нет · ДО" : isToday ? moment.label() : lessons.isEmpty() ? "Без пар" : lessons.stream().map(ScheduleEngine.Lesson::slot).distinct().count()+" пары по расписанию";
-        summary.addView(text(headline,18,Color.WHITE,true));
+        boolean isToday=selected.equals(LocalDate.now(settings.zone())), distance=day.remoteOnly();
         ScheduleEngine.Lesson active=moment.current()!=null ? moment.current() : moment.next();
-        if (isToday && active!=null) {
-            boolean ambiguous=active.week()!=null && settings.week(selected)==null;
-            summary.addView(text(ambiguous ? "Зависит от чётности недели" : active.shortTitle(),24,Color.WHITE,true));
-            summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),14,Color.WHITE,false));
-            if (moment.current()!=null && moment.next()!=null) summary.addView(text("Далее: "+moment.next().slot()+" пара · "+moment.next().shortTitle(),14,Color.WHITE,false));
-        } else summary.addView(text(distance ? "Занятия — дистанционно." : lessons.isEmpty() ? ("base".equals(day.source()) ? "По базовому расписанию. Замены не подтверждены." : "По опубликованному расписанию очных пар нет.") : "Все пары дня — ниже",15,Color.WHITE,false));
-        column.addView(summary); gap(20);
-        for (ScheduleEngine.Lesson lesson : lessons) {
-            LinearLayout card=vertical(); card.setPadding(dp(16),dp(12),dp(16),dp(14));
-            card.setBackground(background(isToday && moment.current()!=null && lesson.slot()==moment.current().slot() ? TINT : SURFACE,16));
-            String variant=lesson.week()!=null && settings.week(selected)==null ? " · "+ScheduleEngine.weekLabel(lesson.week()).toLowerCase(RU)+" неделя" : "";
-            card.addView(text(lesson.slot()+" пара · "+settings.bellLabel(lesson.slot())+variant,13,ACCENT,true));
-            card.addView(text(lesson.title(),19,INK,true));
-            card.addView(text(ScheduleEngine.room(lesson),17,ACCENT,true));
-            if(!lesson.teacher().isEmpty()) card.addView(text(lesson.teacher(),14,MUTED,false)); column.addView(card); gap(10);
+        if(distance || lessons.isEmpty() || isToday) {
+            LinearLayout summary=surface();summary.setPadding(dp(20),dp(16),dp(20),dp(16));
+            String headline=distance?"Дистанционно":isToday?moment.label():"Без пар";
+            summary.addView(text(headline,12,ACCENT,true));
+            if(isToday && active!=null) {
+                boolean ambiguous=active.week()!=null && settings.week(selected)==null;
+                summary.addView(text(ambiguous?"Зависит от чётности недели":active.shortTitle(),24,INK,true));
+                summary.addView(text(ScheduleEngine.room(active)+" · "+settings.bellLabel(active.slot()),13,MUTED,false));
+            } else {
+                summary.addView(text(distance?"Сегодня в ДО":lessons.isEmpty()?"Очных пар нет":"Пары закончились",24,INK,true));
+                summary.addView(text(distance?"В колледж ехать не нужно.":lessons.isEmpty()?("base".equals(day.source())?"По базовому расписанию. Замены не подтверждены.":"По опубликованному расписанию."):"Расписание дня — ниже.",13,MUTED,false));
+            }
+            column.addView(summary);gap(24);
         }
-        gap(8);
-        column.addView(button("Добавить виджет",this::pinWidget));
-        column.addView(text("Сайт КМТ + базовое расписание, 1 семестр 2026–2027.\nОбновление при открытии и в фоне. Android может задерживать фоновые запросы.\nЧасовой пояс: "+settings.zone().getId(),12,MUTED,false));
+        if(!lessons.isEmpty()) {
+            LinearLayout section=row(); fill(section,text("Пары на день",14,INK,true));
+            section.addView(text(Integer.toString((int)lessons.stream().map(ScheduleEngine.Lesson::slot).distinct().count()),13,MUTED,false));column.addView(section);gap(8);
+            LinearLayout agenda=surface();
+            for(int i=0;i<lessons.size();i++) {
+                ScheduleEngine.Lesson lesson=lessons.get(i);
+                boolean current=isToday && moment.current()!=null && lesson.slot()==moment.current().slot();
+                LinearLayout item=new LinearLayout(this);item.setGravity(Gravity.TOP);item.setPadding(dp(16),dp(16),dp(16),dp(16));
+                LinearLayout times=vertical();
+                if(!settings.bells().isEmpty()) {
+                    ScheduleEngine.Bell bell=settings.bells().get(lesson.slot()-1);
+                    times.addView(text(bell.start().format(Settings.TIME),14,current?ACCENT:INK,true));
+                    times.addView(text(bell.end().format(Settings.TIME),11,MUTED,false));
+                } else times.addView(text(lesson.slot()+" пара",12,MUTED,true));
+                item.addView(times,new LinearLayout.LayoutParams(dp(64),-2));
+                LinearLayout info=vertical();
+                String variant=lesson.week()!=null && settings.week(selected)==null?" · "+ScheduleEngine.weekLabel(lesson.week()).toLowerCase(RU):"";
+                info.addView(text(lesson.slot()+" пара"+variant+(current?" · идёт":""),11,current?ACCENT:MUTED,true));
+                info.addView(text(lesson.title(),16,INK,true));
+                info.addView(text(ScheduleEngine.room(lesson),13,ACCENT,true));
+                if(!lesson.teacher().isEmpty()) info.addView(text(lesson.teacher(),12,MUTED,false));
+                fill(item,info);agenda.addView(item);if(i<lessons.size()-1)separator(agenda,80);
+            }
+            column.addView(agenda);gap(20);
+        }
+        column.addView(button("Добавить виджет",this::pinWidget));gap(12);
+        TextView footer=text("КМТ · ИС-232 · 1 семестр 2026–2027",11,MUTED,false);footer.setGravity(Gravity.CENTER);column.addView(footer);
         renderedDate=selected;restoreScroll(previousScroll);
     }
     void restoreScroll(int y) {
